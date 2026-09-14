@@ -4,7 +4,34 @@ Current session state. Update at the end of every turn (see `MEMORY.md`
 standing rules). When a session ends, fold the in-flight items into
 `HANDOVER.md`.
 
-## Current session
+## Current session (2026-09-14 — crates.io publish)
+
+- Date: 2026-09-14
+- Mode: build
+- Agent: opencode (muse-spark) + 1 general subagent (fixed-interval publisher)
+- Branch: (working tree; publish metadata uncommitted per no-implicit-commit rule)
+
+### Publish state
+
+- v0.1.0, 9/20 crates live on crates.io: themql-core,
+  themql-schema, themql-runtime, themql-message, themql-query,
+  themql-artifact, themql-storage, themql-telemetry, themql-sse.
+- Remaining 11 (dependency order): themql-mqtt,
+  themql-gnc, themql-estimation, themql-transport, themql-cache,
+  themql-graphql, themql-analysis, themql-inference,
+  themql-training, themql-desktop, themql-embedded.
+- Detached publisher: `scripts/publish_crates.sh all`
+  (PID 2483485 at handoff, log `/tmp/opencode/publish-fixed.log`,
+  fixed 720s interval, ETA ~13:20 UTC for all 20).
+- Monitor: `tail /tmp/opencode/publish-fixed.log`; verify with
+  `curl -A <ua> https://crates.io/api/v1/crates/<name>/0.1.0`.
+- BUG-0009 opened (rust-toolchain.toml miri-on-stable breaks
+  rustup proxy; workaround = pinned-toolchain PATH).
+- Validation before publish all green: fmt, check, test (0
+  failures), clippy `-D warnings`, metadata, TOML sanity.
+- See HANDOVER.md 2026-09-14 entry for the full handoff.
+
+## Current session (2026-08-20 record below)
 
 - Date: 2026-08-20
 - Mode: build
