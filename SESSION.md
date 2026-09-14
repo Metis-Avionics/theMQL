@@ -13,6 +13,11 @@ standing rules). When a session ends, fold the in-flight items into
 
 ### Publish state
 
+- PR: https://github.com/Metis-Avionics/theMQL/pull/10
+  (`feat/crates-io-publish` → `main`; commit `82d1300`: 30 files —
+  packaging metadata + `scripts/publish_crates.sh` + living docs).
+  Pre-existing gnc/estimation `src/lib.rs` fmt drift left
+  uncommitted, out of scope.
 - v0.1.0, 9/20 crates live on crates.io: themql-core,
   themql-schema, themql-runtime, themql-message, themql-query,
   themql-artifact, themql-storage, themql-telemetry, themql-sse.

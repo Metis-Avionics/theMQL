@@ -5,7 +5,10 @@ Update after every turn (see `MEMORY.md` standing rules).
 
 ## [Unreleased]
 
-### 2026-09-14 — crates.io publishing (8/20 live, background publisher for rest)
+### 2026-09-14 — crates.io publishing (9/20 live, background publisher for rest)
+
+PR: https://github.com/Metis-Avionics/theMQL/pull/10
+(`feat/crates-io-publish`, commit `82d1300`).
 
 First crates.io release (v0.1.0). Fixes two publish blockers, then
 publishes in dependency order under the crates.io new-crate rate limit.

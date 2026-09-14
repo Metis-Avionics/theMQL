@@ -4,10 +4,13 @@ Handover notes for the next agent/session. Fold in-flight items from
 `SESSION.md` here when a session ends. Update after every turn (see
 `MEMORY.md` standing rules).
 
-## Handover from: opencode (muse-spark) + publish subagent, 2026-09-14 (crates.io publish in progress — 8/20 live)
+## Handover from: opencode (muse-spark) + publish subagent, 2026-09-14 (crates.io publish in progress — 9/20 live, PR #10 open)
 
 ### Repository state at handover
 
+- PR #10: https://github.com/Metis-Avionics/theMQL/pull/10
+  (`feat/crates-io-publish` → `main`, commit `82d1300`). CI
+  running; merge after green + review.
 - v0.1.0 crates.io release underway. **9/20 crates live**:
   themql-core, themql-schema, themql-runtime, themql-message,
   themql-query, themql-artifact, themql-storage, themql-telemetry,
