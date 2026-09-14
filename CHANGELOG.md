@@ -5,6 +5,7 @@ Update after every turn (see `MEMORY.md` standing rules).
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ### 2026-09-30 — Breaking: `ErrorCode` gains `NotFound`, `AuthorizationError`, `Conflict`
 
 `themql-core` `ErrorCode` goes from 6 variants to 9. Each addition separates
@@ -32,6 +33,9 @@ statements. This is why the workspace moves `0.1.0` → `0.2.0`. The full
 19-crate workspace was verified to compile unchanged.
 
 ### 2026-09-14 — crates.io publishing (18/20 live after fixed-interval publisher ran)
+
+PR: https://github.com/Metis-Avionics/theMQL/pull/10
+(`feat/crates-io-publish`, commit `82d1300`).
 
 First crates.io release (v0.1.0). Fixes two publish blockers, then
 publishes in dependency order under the crates.io new-crate rate limit.
