@@ -5,6 +5,53 @@ Update after every turn (see `MEMORY.md` standing rules).
 
 ## [Unreleased]
 
+### 2026-09-14 — crates.io publishing (9/20 live, background publisher for rest)
+
+PR: https://github.com/Metis-Avionics/theMQL/pull/10
+(`feat/crates-io-publish`, commit `82d1300`).
+
+First crates.io release (v0.1.0). Fixes two publish blockers, then
+publishes in dependency order under the crates.io new-crate rate limit.
+
+- **Per-crate READMEs (2026-09-14, later same day)**: every crate
+  now has its own `README.md` (role, key API, spec pointer,
+  feature/safety notes) wired via `readme = "README.md"` in all 20
+  manifests. Verified with `cargo package --list` (README.md
+  included). The 10 already-live crates predate this change, so
+  their READMEs render from the next version on; all remaining
+  crates publish with READMEs since the background publisher
+  packages the working tree (`--allow-dirty`).
+
+- **Packaging metadata**: root `Cargo.toml [workspace.package]` gains
+  `description` (from `SPEC.toml [project]`), `repository` /
+  `documentation` / `homepage`, `keywords`, `categories`. All 20 crate
+  manifests inherit them via `.workspace = true`. All internal path
+  deps gain `version = "0.1.0"` (cargo requires a version requirement
+  on every path dep when publishing); `themql-embedded`'s two direct
+  `path = "../..."` deps fixed the same way.
+- **Published live (10 and counting)**: themql-core, themql-schema, themql-runtime,
+  themql-message, themql-query, themql-artifact, themql-storage,
+  themql-telemetry, themql-sse, themql-mqtt — all v0.1.0, published with `--allow-dirty`
+  (repo policy: no implicit commits; Cargo.toml changes uncommitted).
+- **Remaining (10)**: themql-gnc,
+  themql-estimation, themql-transport, themql-cache, themql-graphql,
+  themql-analysis, themql-inference, themql-training, themql-desktop,
+  themql-embedded.
+- **Fixed-interval publisher**: new `scripts/publish_crates.sh`
+  (`all` = loop one crate per `PUBLISH_INTERVAL`, default 720s;
+  `next` = publish one crate, cron-friendly). Idempotent via
+  crates.io version-API check; handles 429 retry-after. Running
+  detached (see HANDOVER.md for PID/log). ETA ~2.5h for the rest.
+- **Subagent fix**: background agent found `is_published()` always
+  returned false — crates.io answers 403 without an explicit
+  `User-Agent` — and fixed it (`curl -A
+  "theMQL-publish-script/0.1.0"`), preventing an infinite
+  publish-core/sleep loop.
+- **Validation before publish**: `cargo fmt --check`, `cargo check
+  --workspace`, `cargo test --workspace` (all pass, 0 failures),
+  `cargo clippy --workspace --all-targets -- -D warnings`,
+  `cargo metadata`, TOML sanity — all green.
+
 ### 2026-08-20 — Phase 9: core runtime closures
 
 Third phase of the 7-phase sweep. Closes several mid-size spec gaps.

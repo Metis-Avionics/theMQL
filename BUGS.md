@@ -25,7 +25,34 @@ line + date + commit/PR reference when fixed.
 
 ## Open bugs
 
-(none)
+### BUG-0009: rust-toolchain.toml `miri` component breaks rustup proxy on tracking stable
+
+- Discovered: 2026-09-14 (during crates.io publish preparation)
+- Severity: minor (workaround exists)
+- Subsystem: ci / toolchain
+- Status: open
+- Symptom: any plain `cargo`/`rustc` invocation in the repo goes
+  through the rustup proxy, which reads `rust-toolchain.toml`
+  (`channel = "stable"`, `components = [..., "miri"]`) and tries to
+  sync stable; sync fails with "component 'miri' ... is unavailable
+  for download". `cargo publish --verify` fails at `rustc -vV`
+  for the same reason.
+- Expected: stock `cargo` commands work in a fresh checkout.
+- Reproduction: `cargo --version` (or any cargo command) in
+  `/home/leo/theMQL` without a pinned toolchain on PATH.
+- Root cause: `miri` is nightly-only and no longer shipped for
+  stable; pinning it as a stable component plus an unpinned
+  tracking `stable` channel forces a failing sync. (TETANUS still
+  wants miri via `cargo +nightly miri test`, which does not need
+  the stable component.)
+- Fix: undecided — either drop `miri` from stable components or pin
+  `channel` to a dated stable (e.g. `1.98.0`). Do not break the
+  `cargo +nightly miri test` safety gate when fixing.
+- Workaround: prefix PATH with the pinned toolchain —
+  `PATH="$HOME/.rustup/toolchains/1.98.0-x86_64-unknown-linux-gnu/bin:$PATH"`
+  (also baked into `scripts/publish_crates.sh`). Follow-up: none yet.
+- Update 2026-09-14: still open; workaround in active use by the
+  detached crates.io publisher (PID 2483485).
 
 ## Resolved bugs
 
