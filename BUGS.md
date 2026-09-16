@@ -51,6 +51,8 @@ line + date + commit/PR reference when fixed.
 - Workaround: prefix PATH with the pinned toolchain —
   `PATH="$HOME/.rustup/toolchains/1.98.0-x86_64-unknown-linux-gnu/bin:$PATH"`
   (also baked into `scripts/publish_crates.sh`). Follow-up: none yet.
+- Update 2026-09-14: still open; workaround in active use by the
+  detached crates.io publisher (PID 2483485).
 
 ## Resolved bugs
 

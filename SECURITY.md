@@ -162,9 +162,10 @@ Before a change touches anything in `themql-transport`, `themql-graphql`,
 ## Known limitations (as of v0.1, 2026-08-20, Phase 7 complete)
 
 **Release note (2026-09-14, crates.io publish in progress):** v0.1.0
-is being published to the public crates.io registry (9/20 live at
+is being published to the public crates.io registry (10/20 live at
 last update; remainder via detached fixed-interval publisher — see
-HANDOVER.md). Publishing makes the crate sources world-readable;
+HANDOVER.md). Per-crate READMEs added the same day (no code
+change, packaging metadata only). Publishing makes the crate sources world-readable;
 no secrets are in the tree (registry token lives in
 `~/.cargo/credentials.toml`, outside the repo — never commit it).
 No code changed for the release beyond packaging metadata

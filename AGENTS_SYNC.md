@@ -19,6 +19,15 @@ Update after every turn (see `MEMORY.md` standing rules).
 
 ## Log
 
+### 2026-09-14 — no subagents this turn (per-crate READMEs)
+
+Lead agent wrote `crates/*/README.md` (20 files) + `readme =
+"README.md"` in all 20 manifests directly; no subagents spawned.
+Background publisher (PID 2483485, started by the prior turn's
+subagent) verified still alive with themql-mqtt freshly published
+(10/20 live). `cargo package --list` confirms README.md is
+packaged. Uncommitted — user did not ask for a commit.
+
 ### 2026-09-14 — opencode → general subagent (fixed-interval crates.io publisher)
 
 - Subagent(s): 1 general subagent (task `ses_f6076af5affeQr89K8xgNJ6GC2`)

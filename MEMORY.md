@@ -72,9 +72,9 @@ deliberate, not an oversight.
   DefaultQueryExecutor orchestrator, real EmbassyRuntime::sleep,
   StubThedafAdapter, MQTT retained messages, apalis JobQueue stub;
   402 tests pass workspace-wide)
-- crates.io: v0.1.0 publishing in progress since 2026-09-14 — 9/20
+- crates.io: v0.1.0 publishing in progress since 2026-09-14 — 10/20
   live (core, schema, runtime, message, query, artifact, storage,
-  telemetry, sse); remaining 11 via detached fixed-interval publisher
+  telemetry, sse, mqtt); remaining 10 via detached fixed-interval publisher
   (`scripts/publish_crates.sh all`, log
   `/tmp/opencode/publish-fixed.log`, ~12 min/crate, ETA ~13:20 UTC
   2026-09-14). All manifests carry workspace-inherited
@@ -299,6 +299,12 @@ on theDAF. the embedded binary must not depend on theDAF.
 
 ## Decision log (chronological)
 
+- 2026-09-14 (later): per-crate READMEs for all 20 crates
+  (`crates/*/README.md`, `readme = "README.md"` in manifests;
+  verified in package via `cargo package --list`). Uncommitted;
+  remaining publishes pick them up via `--allow-dirty`. The 10
+  live crates predate the change (READMEs render from next
+  version). No commit — user did not ask.
 - 2026-09-14: crates.io publishing started (v0.1.0). Added
   workspace-inherited publish metadata (description from SPEC.toml,
   repository/documentation/homepage, keywords, categories) and

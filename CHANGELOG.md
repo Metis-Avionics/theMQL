@@ -5,7 +5,6 @@ Update after every turn (see `MEMORY.md` standing rules).
 
 ## [Unreleased]
 
-<<<<<<< HEAD
 ### 2026-09-30 — Breaking: `ErrorCode` gains `NotFound`, `AuthorizationError`, `Conflict`
 
 `themql-core` `ErrorCode` goes from 6 variants to 9. Each addition separates
@@ -39,6 +38,15 @@ PR: https://github.com/Metis-Avionics/theMQL/pull/10
 
 First crates.io release (v0.1.0). Fixes two publish blockers, then
 publishes in dependency order under the crates.io new-crate rate limit.
+
+- **Per-crate READMEs (2026-09-14, later same day)**: every crate
+  now has its own `README.md` (role, key API, spec pointer,
+  feature/safety notes) wired via `readme = "README.md"` in all 20
+  manifests. Verified with `cargo package --list` (README.md
+  included). The 10 already-live crates predate this change, so
+  their READMEs render from the next version on; all remaining
+  crates publish with READMEs since the background publisher
+  packages the working tree (`--allow-dirty`).
 
 - **Packaging metadata**: root `Cargo.toml [workspace.package]` gains
   `description` (from `SPEC.toml [project]`), `repository` /
