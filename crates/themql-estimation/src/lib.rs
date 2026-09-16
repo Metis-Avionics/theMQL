@@ -266,7 +266,7 @@ impl EstimatorHealth {
             + state.x[7] * state.x[7]
             + state.x[8] * state.x[8]
             + state.x[9] * state.x[9])
-        .sqrt();
+            .sqrt();
         if (q_norm - 1.0).abs() > 1e-6 {
             return Err(EstimationError::HealthCheckFailed {
                 reason: format!("quaternion norm {q_norm} not unit"),

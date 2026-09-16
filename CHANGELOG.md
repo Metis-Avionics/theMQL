@@ -13,6 +13,15 @@ PR: https://github.com/Metis-Avionics/theMQL/pull/10
 First crates.io release (v0.1.0). Fixes two publish blockers, then
 publishes in dependency order under the crates.io new-crate rate limit.
 
+- **Per-crate READMEs (2026-09-14, later same day)**: every crate
+  now has its own `README.md` (role, key API, spec pointer,
+  feature/safety notes) wired via `readme = "README.md"` in all 20
+  manifests. Verified with `cargo package --list` (README.md
+  included). The 10 already-live crates predate this change, so
+  their READMEs render from the next version on; all remaining
+  crates publish with READMEs since the background publisher
+  packages the working tree (`--allow-dirty`).
+
 - **Packaging metadata**: root `Cargo.toml [workspace.package]` gains
   `description` (from `SPEC.toml [project]`), `repository` /
   `documentation` / `homepage`, `keywords`, `categories`. All 20 crate
@@ -20,11 +29,11 @@ publishes in dependency order under the crates.io new-crate rate limit.
   deps gain `version = "0.1.0"` (cargo requires a version requirement
   on every path dep when publishing); `themql-embedded`'s two direct
   `path = "../..."` deps fixed the same way.
-- **Published live (9 and counting)**: themql-core, themql-schema, themql-runtime,
+- **Published live (10 and counting)**: themql-core, themql-schema, themql-runtime,
   themql-message, themql-query, themql-artifact, themql-storage,
-  themql-telemetry, themql-sse — all v0.1.0, published with `--allow-dirty`
+  themql-telemetry, themql-sse, themql-mqtt — all v0.1.0, published with `--allow-dirty`
   (repo policy: no implicit commits; Cargo.toml changes uncommitted).
-- **Remaining (11)**: themql-mqtt, themql-gnc,
+- **Remaining (10)**: themql-gnc,
   themql-estimation, themql-transport, themql-cache, themql-graphql,
   themql-analysis, themql-inference, themql-training, themql-desktop,
   themql-embedded.

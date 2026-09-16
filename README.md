@@ -3,10 +3,10 @@
 The Message Query Language — a native Rust message-query runtime for desktop,
 distributed, telemetry, analysis, AI, GNC, and embedded systems.
 
-> **crates.io (2026-09-14, v0.1.0 in progress):** 9/20 crates live —
+> **crates.io (2026-09-14, v0.1.0 in progress):** 10/20 crates live —
 > `themql-core`, `themql-schema`, `themql-runtime`, `themql-message`,
 > `themql-query`, `themql-artifact`, `themql-storage`,
-> `themql-telemetry`, `themql-sse`. The remaining 11 publish in dependency order
+> `themql-telemetry`, `themql-sse`, `themql-mqtt`. The remaining 10 publish in dependency order
 > via the detached fixed-interval publisher
 > (`scripts/publish_crates.sh`; log: `/tmp/opencode/publish-fixed.log`).
 > See `HANDOVER.md` (2026-09-14 entry) for status and monitoring.

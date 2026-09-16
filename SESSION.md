@@ -18,13 +18,17 @@ standing rules). When a session ends, fold the in-flight items into
   packaging metadata + `scripts/publish_crates.sh` + living docs).
   Pre-existing gnc/estimation `src/lib.rs` fmt drift left
   uncommitted, out of scope.
-- v0.1.0, 9/20 crates live on crates.io: themql-core,
+- v0.1.0, 10/20 crates live on crates.io: themql-core,
   themql-schema, themql-runtime, themql-message, themql-query,
-  themql-artifact, themql-storage, themql-telemetry, themql-sse.
-- Remaining 11 (dependency order): themql-mqtt,
-  themql-gnc, themql-estimation, themql-transport, themql-cache,
+  themql-artifact, themql-storage, themql-telemetry, themql-sse,
+  themql-mqtt.
+- Remaining 10 (dependency order): themql-gnc,
+  themql-estimation, themql-transport, themql-cache,
   themql-graphql, themql-analysis, themql-inference,
   themql-training, themql-desktop, themql-embedded.
+- Per-crate READMEs added this turn (all 20 crates,
+  `readme = "README.md"` in manifests) — remaining crates publish
+  with them; the 10 live ones predate the change.
 - Detached publisher: `scripts/publish_crates.sh all`
   (PID 2483485 at handoff, log `/tmp/opencode/publish-fixed.log`,
   fixed 720s interval, ETA ~13:20 UTC for all 20).

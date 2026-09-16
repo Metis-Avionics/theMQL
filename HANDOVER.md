@@ -4,21 +4,26 @@ Handover notes for the next agent/session. Fold in-flight items from
 `SESSION.md` here when a session ends. Update after every turn (see
 `MEMORY.md` standing rules).
 
-## Handover from: opencode (muse-spark) + publish subagent, 2026-09-14 (crates.io publish in progress — 9/20 live, PR #10 open)
+## Handover from: opencode (muse-spark) + publish subagent, 2026-09-14 (crates.io publish in progress — 10/20 live, PR #10 open)
 
 ### Repository state at handover
 
 - PR #10: https://github.com/Metis-Avionics/theMQL/pull/10
   (`feat/crates-io-publish` → `main`, commit `82d1300`). CI
   running; merge after green + review.
-- v0.1.0 crates.io release underway. **9/20 crates live**:
+- v0.1.0 crates.io release underway. **10/20 crates live**:
   themql-core, themql-schema, themql-runtime, themql-message,
   themql-query, themql-artifact, themql-storage, themql-telemetry,
-  themql-sse.
-- **11 remain** (dependency order): themql-mqtt,
-  themql-gnc, themql-estimation, themql-transport, themql-cache,
+  themql-sse, themql-mqtt.
+- **10 remain** (dependency order): themql-gnc,
+  themql-estimation, themql-transport, themql-cache,
   themql-graphql, themql-analysis, themql-inference,
   themql-training, themql-desktop, themql-embedded.
+- Per-crate READMEs added after the PR commits (uncommitted):
+  `crates/*/README.md` + `readme = "README.md"` in all 20
+  manifests. Remaining publishes pick them up automatically
+  (`--allow-dirty` packages the working tree); decide commit
+  strategy (fold into PR #10 or follow-up).
 - Publish metadata committed to the working tree but **not
   committed to git** (no-implicit-commit rule): root
   `[workspace.package]` description/repository/documentation/
