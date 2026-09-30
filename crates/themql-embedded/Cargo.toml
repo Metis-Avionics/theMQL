@@ -22,7 +22,6 @@ themql-estimation = { path = "../themql-estimation", default-features = false }
 nalgebra = { version = "0.35", default-features = false, features = ["libm"] }
 
 [dependencies]
-embedded-hal.workspace = true
 embedded-hal-async.workspace = true
 embedded-io-async.workspace = true
 

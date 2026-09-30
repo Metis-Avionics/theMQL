@@ -241,11 +241,7 @@ impl ControllerHealth {
     ///
     /// # Errors
     /// Returns [`GncError::HealthCheckFailed`] on any violation.
-    pub fn check(
-        &self,
-        state: &GncState,
-        cmd: &ActuatorCommand,
-    ) -> Result<(), GncError> {
+    pub fn check(&self, state: &GncState, cmd: &ActuatorCommand) -> Result<(), GncError> {
         for i in 0..ACTUATOR_COUNT {
             let v = cmd.values[i];
             if !v.is_finite() {
