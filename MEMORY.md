@@ -581,3 +581,28 @@ genuinely could not build. **A red CI job that nobody attributes is a bug with
 no owner.** When a gate is red on `main`, reproduce it on `main` (stash the
 branch) before assuming your change caused it — and fix it rather than filing
 it, if the fix is this small.
+
+### ErrorCode separation rule (added 2026-09-30)
+
+`ErrorCode` is not a convenience taxonomy. Three pairs of codes must never be
+collapsed, and each exists specifically to keep a fail-closed decision
+distinguishable from an ordinary one:
+
+- `NotFound` (fact about the **data**) vs `CacheMiss` (fact about the
+  **lookup path**). A caller that retries a `CacheMiss` against the authority
+  must not read a `NotFound` as succeed-as-empty.
+- `AuthorizationError` (audited **policy denial**) vs `ResolverError` (domain
+  fault or dependency failure). Collapsing these makes a revoked grant
+  indistinguishable from an outage.
+- `Conflict` (lost CAS race, **retryable**) vs `ValidationError` (input
+  malformed, not retryable).
+
+**The rule:** a caller that must fail closed on a denial matches
+`ErrorCode::AuthorizationError` and MUST NOT fall through to the authoritative
+store on it. Authority is the rule `crates/themql-core/tests/error_code_wire_contract.rs`
+enforces injectively over the variant→wire-string map, because a transport
+projection (GraphQL / MQTT / SSE) that maps two codes to one string silently
+reinstates the collapse at the edge.
+
+Adding a variant is breaking for downstream exhaustive `match`, hence
+`0.1.0` → `0.2.0` rather than a patch.

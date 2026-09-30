@@ -117,6 +117,18 @@ drift. The workspace is on **edition 2024**. See `MEMORY.md` for why a pin only
 one of the two files knows about is not a pin, and why the CI action ref is
 `@master` with an explicit `toolchain:` input rather than `@stable`.
 
+**v0.2.0 (in review, `feat/error-code-authz-notfound-conflict`)** — breaking:
+`ErrorCode` extended 6 → 9 variants. `NotFound` (a fact about the data),
+`AuthorizationError` (an audited policy denial) and `Conflict` (a lost
+compare-and-set race) are now distinct from `CacheMiss` (a fact about the
+lookup path), `ResolverError` (a domain fault) and `ValidationError` (a
+malformed input) respectively. Collapsing any of those pairs would make a
+fail-closed decision indistinguishable from an ordinary one; see
+`specs/core.toml [types.ErrorCode.separation_rule]`, the standing rule in
+`MEMORY.md`, and the security note in `SECURITY.md`. `ErrorCode` is the one
+type every transport adapter projects, so the wire contract is asserted
+injectively in `crates/themql-core/tests/error_code_wire_contract.rs`.
+
 v0.1 specification drop + Phase 1 complete + Phase 2 Stages 1-12
 complete + Phase 3 Stages 1-11 complete. Workspace skeleton, deep
 specs, toolchain config, real `src/` content for ALL 20 crates,

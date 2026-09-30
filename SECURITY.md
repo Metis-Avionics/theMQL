@@ -66,6 +66,19 @@ Treat embedded-domain findings as safety issues, not just security issues.
 - **Implicit cache invalidation** — hidden or implicit cache invalidation
   can cause stale data to be served as authoritative. Spec-forbidden
   (`specs/cache.toml`).
+- **Collapsed error codes** — reporting an authorization denial as
+  `ResolverError` makes a revoked grant indistinguishable from a domain
+  failure or an outage; reporting it as `CacheMiss` invites a retry that the
+  authoritative store then answers on the caller's behalf. `ErrorCode` carries
+  `NotFound`, `AuthorizationError` and `Conflict` as distinct variants
+  precisely so these cannot be collapsed, and
+  `specs/core.toml [types.ErrorCode.separation_rule]` makes
+  `AuthorizationError` the fail-closed match target that MUST NOT fall through
+  to the authority. A transport projection that maps two codes onto one wire
+  string silently reinstates the collapse at the edge, so
+  `crates/themql-core/tests/error_code_wire_contract.rs` asserts the
+  variant→wire-string map is injective. Collapsing these is an authorization
+  bypass, not a cosmetic change.
 - **Unbounded channels / uncontrolled backpressure** — DoS vector.
   Spec-discouraged (`specs/runtime.toml`).
 - **Blocking work on async executor** — can stall the runtime. Spec-forbidden
