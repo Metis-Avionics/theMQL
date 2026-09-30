@@ -2,7 +2,7 @@
 //!
 //! Covers `SPEC.toml [quality] benchmark_hot_paths = true`.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use themql_cache::{
     Cache, CacheEntry, CacheKey, CachePolicy, CacheTier, L1Cache, L2Cache, TieredCache,
 };

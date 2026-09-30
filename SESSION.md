@@ -175,3 +175,50 @@ exhausted this 6 GB box and OOM-killed a `themql-desktop` test link even at
 `-j 2`; the peak is one link process, not the job count. The desktop static
 assertions were moved out of a Rust test and into the Python guard, which
 needs no linking at all. Recorded as a standing rule in `MEMORY.md`.
+
+- Branch: `chore/pin-toolchain-1.98.1-edition-2024` (off main)
+- Toolchain: Rust 1.98.1 (pinned by this branch, previously floating `stable`)
+
+## Just-completed turn
+
+Pin the toolchain, migrate to edition 2024, and fix the embedded target.
+
+- `rust-toolchain.toml`: `stable` -> `1.98.1`. All seven CI jobs pinned to the
+  same version, keeping their original components/targets. Fixed three duplicate
+  `with:` YAML keys introduced while doing it (caught by a strict duplicate-key
+  parse, not by eye).
+- Edition 2021 -> 2024 across all 19 crates. 22 `collapsible_if` sites became
+  let-chains via `clippy --fix` scoped to that lint; 28 sites reformatted by
+  rustfmt's new style edition.
+- New `ci_guard.py` check 4: the pin and every CI job must agree, and a
+  floating channel in either is rejected.
+- **Found and fixed a pre-existing red CI job**: `embedded-check` did not
+  compile on `main`. `no_std` production code in `themql-estimation` and
+  `themql-gnc` used `format!` and `f64::sqrt` without the `alloc` imports they
+  need, and `themql-gnc` lacked the `num-traits` dependency entirely.
+  Reproduced on stashed `main` first, so the attribution is proven rather than
+  assumed.
+
+## Verification
+
+- `cargo check --workspace` — clean on edition 2024, first attempt
+- `cargo clippy --workspace --all-targets -- -D warnings` — 0 warnings
+- `cargo fmt --all -- --check` — clean
+- `cargo check -p themql-embedded --target thumbv7em-none-eabihf` — **green**
+  (was red on `main`)
+- `python3 scripts/ci_guard.py` — 4/4 OK
+- Tests on the crates with semantic changes: themql-storage 36,
+  themql-query 21, themql-cache 36, themql-mqtt 39 — all pass
+- `check_toolchain_pin` negative-tested x5, including a drift in the *last*
+  CI job, which the first (regex-based) implementation missed entirely
+
+## Caveats
+
+- **Full workspace test suite not run locally.** `themql-desktop` pulls polars
+  and tch; linking its test binary OOM-killed this 6 GB box at `-j 2`, and a
+  concurrent build was competing for the same memory. CI runs it.
+- `cargo deny check` still fails on this branch for `RUSTSEC-2026-0285`. That is
+  pre-existing on `main` and is fixed by PR #12; this branch does not include
+  that lock bump.
+- `cargo machete`/`deny` duplicate-version and wildcard warnings are untouched
+  pre-existing debt.

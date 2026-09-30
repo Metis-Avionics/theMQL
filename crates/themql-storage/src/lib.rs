@@ -364,11 +364,11 @@ impl Storage for SledStorage {
                 for item in self.db.iter() {
                     let (kb, vb) = item.map_err(|_| StorageError::InternalError)?;
                     let sk = Self::deserialize_key(&kb)?;
-                    if let Some(subject) = subject_from_storage_key(&sk) {
-                        if pattern.matches(&subject) {
-                            let v = Self::deserialize_value(&vb)?;
-                            entries.push((sk, v));
-                        }
+                    if let Some(subject) = subject_from_storage_key(&sk)
+                        && pattern.matches(&subject)
+                    {
+                        let v = Self::deserialize_value(&vb)?;
+                        entries.push((sk, v));
                     }
                 }
                 Ok(StorageResultSet {

@@ -530,3 +530,54 @@ is how a guarded invariant gets un-guarded.
 count. Static assertions about the desktop crate's source belong in
 `scripts/ci_guard.py`, which is what checks 5 and 6 are. If a behavioural test
 really needs that binary, run it in CI, not here.
+
+### Toolchain pin is enforced, not just written (added 2026-09-30)
+
+`rust-toolchain.toml` and every CI job must name the same exact toolchain.
+`ci_guard.py` check 4 asserts it and rejects a floating channel in either
+file.
+
+**Why the checker rather than the file alone.** With only `rust-toolchain.toml`,
+CI can still install its own default and nobody notices until a release lands.
+With only CI, local builds drift from what CI tested and "passes on CI" stops
+meaning "builds here". Both files drifting apart is the normal way a pin
+decays, and it is invisible because each file looks individually correct.
+
+**Why the CI ref is `@master` and not `@stable`.** In
+`dtolnay/rust-toolchain`, the ref selects the *action*; the `toolchain:` input
+selects the *compiler*. `dtolnay/rust-toolchain@stable` with
+`toolchain: 1.98.1` still installs stable — the input is ignored. The pinned
+form is `@master` + an explicit value.
+
+**Parsing lesson, recorded because it nearly shipped.** The first version of
+this check parsed CI with
+`-\s*uses:\s*dtolnay/rust-toolchain@\S+\s*\n((?:\s+with:...)+)`. It looks
+correct and is wrong: `\s` matches newlines, so the greedy group swallowed the
+rest of the file into the first step's body and only one step was ever checked.
+Drift in any later job passed silently. It is now parsed line-by-line
+(`_toolchain_steps`), with each step's `with:` block bounded by indentation.
+Two further bugs in the same function: a `grep` that matched the *comment
+prose* discussing `channel = "stable"`, and a `not in step` membership test
+that refused to fill in the one value the function exists to read.
+
+A guard that silently stops guarding is worse than no guard, because it is
+trusted. Every guard in this repo is negative-tested by injection before it is
+believed — see the injection table in PR #13.
+
+### no_std: format! and f64::sqrt both need explicit imports (added 2026-09-30)
+
+`themql-embedded`'s `thumbv7em-none-eabihf` build was red for an unknown
+period, because `themql-estimation` and `themql-gnc` are `#![no_std]` and:
+
+- `format!` is not in the `no_std` prelude. `extern crate alloc` plus
+  `use alloc::format;` is required; importing `String` / `Vec` is not enough.
+- `f64::sqrt` has no inherent `no_std` implementation. It needs a trait in
+  scope — `num_traits::real::Real` under `#[cfg(not(feature = "std"))]`, with
+  `num-traits` carrying the `libm` feature. `nalgebra`'s own `libm` feature
+  does **not** re-export one.
+
+Both are in production `health_check` paths, not tests, so the embedded binary
+genuinely could not build. **A red CI job that nobody attributes is a bug with
+no owner.** When a gate is red on `main`, reproduce it on `main` (stash the
+branch) before assuming your change caused it — and fix it rather than filing
+it, if the fix is this small.

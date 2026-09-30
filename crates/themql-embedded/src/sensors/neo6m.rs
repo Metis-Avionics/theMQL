@@ -8,7 +8,7 @@
 //! NMEA sentence format: `$<talker><type>,<fields>*<checksum>\r\n`
 //! Maximum sentence length is 82 characters (including `$` and `\r\n`).
 
-use crate::sensors::types::{heap_string, SensorDriver, SensorError, SensorKind, SensorReading};
+use crate::sensors::types::{SensorDriver, SensorError, SensorKind, SensorReading, heap_string};
 use embedded_io_async::Read;
 
 /// Maximum NMEA sentence length (including `$` and `\r\n`).

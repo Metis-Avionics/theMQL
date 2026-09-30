@@ -8,7 +8,7 @@
 //! Generic over any `embedded_hal_async::i2c::I2c` implementation.
 //! Default I2C address is 0x6A (0x6B when SA1 is pulled high).
 
-use crate::sensors::types::{heap_string, SensorDriver, SensorError, SensorKind, SensorReading};
+use crate::sensors::types::{SensorDriver, SensorError, SensorKind, SensorReading, heap_string};
 use embedded_hal_async::i2c::I2c;
 
 /// LSM6DS3 default I2C address (SA1 low).

@@ -26,11 +26,16 @@
 
 extern crate alloc;
 
+use alloc::format;
 use alloc::string::String;
 use alloc::string::ToString;
 use core::fmt;
 
 use nalgebra::{SMatrix, UnitQuaternion, Vector3};
+// `no_std` has no inherent `f64::sqrt`; `health_check` needs it. Same import
+// shape as themql-estimation, which hits the identical constraint.
+#[cfg(not(feature = "std"))]
+use num_traits::real::Real;
 use thiserror::Error;
 
 /// Maximum integral windup magnitude per axis. Saturates the integral term

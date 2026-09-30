@@ -1,5 +1,13 @@
 [toolchain]
-channel = "stable"
+# Pinned, not floating. `channel = "stable"` means the toolchain changes
+# under you: a new stable release turns a green branch red with no diff, and
+# clippy lints move between releases. Every published crate's consumers then
+# build against a different compiler than the one its CI passed on.
+#
+# 1.98.1 is the version the workspace is developed and gated on, and it
+# matches the downstream DeGoyle workspace so the crates consume cleanly
+# there. Bump it deliberately, with a CI run, not by accident.
+channel = "1.98.1"
 components = ["rustfmt", "clippy", "rust-src", "miri"]
 targets = [
     "x86_64-unknown-linux-gnu",

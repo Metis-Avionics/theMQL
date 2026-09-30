@@ -1716,3 +1716,52 @@ These run in the Python guard rather than a linked test binary because
 `themql-desktop` pulls polars and tch, and linking its test binary is a real
 cost on a small builder. All three failure paths were proven by injection.
 
+### 2026-09-30 — Pin 1.98.1, migrate to edition 2024, and unbreak the embedded target
+
+**Toolchain**
+
+`rust-toolchain.toml` said `channel = "stable"`. That is a pin that only looks
+like one: the compiler moves under the repository, and a new stable release can
+redden a branch whose diff is empty — expensive to diagnose because the change
+that caused it is not in your tree. Now pinned to **1.98.1**, matching the
+downstream DeGoyle workspace.
+
+All seven CI jobs installed `stable` with no version input. The action's *ref*
+is not the pin; the `toolchain:` input is, so CI now uses
+`dtolnay/rust-toolchain@master` with an explicit `toolchain: 1.98.1` and keeps
+each job's original `components` / `targets`.
+
+New `ci_guard.py` check 4 asserts the pin and every CI job agree, and rejects a
+floating channel in either. A pin only one of the two files knows about is not a
+pin.
+
+**Edition 2021 → 2024**
+
+Whole-workspace migration. The mechanical cost was lower than expected: the
+hazard scan found no `no_mangle` / `export_name` / `link_section`, no
+file-scope `static mut`, no bare `gen` identifier, no `unsafe fn` and no
+`extern "C"` across ~18k lines, so there was no FFI or unsafe surface to
+rework. The only semantic change was `collapsible_if`, which edition 2024 makes
+a let-chain: 22 sites across `themql-storage`, `themql-query`, `themql-mqtt`,
+`themql-cache` and `themql-desktop`, applied with `clippy --fix` scoped to that
+one lint. rustfmt's style edition also changed, which reformatted 28 sites — the
+reformat is a consequence of the edition bump rather than a drive-by, so it
+lands in the same change.
+
+**Embedded target was already broken**
+
+`cargo check -p themql-embedded --target thumbv7em-none-eabihf` did not
+compile, and had not been compiling: the `embedded-check` CI job was red.
+Verified by stashing this branch's changes and reproducing on `main`. Three
+distinct causes, all in `no_std` production code rather than tests:
+
+1. `themql-estimation` and `themql-gnc` call `format!` but import only
+   `String` / `ToString` / `Vec` from `alloc`. Added `use alloc::format;`.
+2. `themql-gnc`'s `health_check` calls `.sqrt()` on an `f64`, which has no
+   inherent `no_std` implementation. `nalgebra`'s `libm` feature does not
+   re-export a trait for it, so `num-traits` is now a dependency of
+   `themql-gnc` and `Real` is imported under `cfg(not(feature = "std"))` —
+   the identical shape `themql-estimation` already used for the same
+   constraint.
+
+The `embedded-check` job is green again.

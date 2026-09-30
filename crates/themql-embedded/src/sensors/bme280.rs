@@ -7,7 +7,7 @@
 //! Generic over any `embedded_hal_async::i2c::I2c` implementation.
 //! Default I2C address is 0x76 (secondary 0x77 when SDO is pulled high).
 
-use crate::sensors::types::{heap_string, SensorDriver, SensorError, SensorKind, SensorReading};
+use crate::sensors::types::{SensorDriver, SensorError, SensorKind, SensorReading, heap_string};
 use embedded_hal_async::i2c::I2c;
 
 /// BME280 default I2C address (SDO low).

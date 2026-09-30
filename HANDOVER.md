@@ -997,3 +997,35 @@ None. Awaiting user direction.
 2. No `cargo publish` needed for this branch; it changes no published API.
 3. Remaining `cargo deny` warnings (29 duplicate-version, 17 wildcard) are
    pre-existing and out of scope here. They are real debt but a separate pass.
+
+## Handover from: opencode (space-bunny-free), 2026-09-30 (toolchain pin + edition 2024 + embedded fix)
+
+### State
+
+- Branch `chore/pin-toolchain-1.98.1-edition-2024`, off `main`, unmerged.
+- Toolchain pinned to 1.98.1 in both `rust-toolchain.toml` and all seven CI
+  jobs, enforced by `ci_guard.py` check 4.
+- Whole workspace on edition 2024.
+- `embedded-check` green again after fixing three `no_std` import/dependency
+  defects (BUG-0004).
+
+### The thing worth carrying forward
+
+**`main` CI was red for four consecutive runs and nobody had attributed it.**
+Two independent causes: the embedded target not compiling (fixed here) and
+`RUSTSEC-2026-0285` in `deny` (fixed in PR #12). Both were found by accident
+while doing unrelated work.
+
+A red gate that nobody attributes is a bug with no owner — each new run looks
+like the same known-red and earns the same inattention. Worth deciding whether
+a red `main` should block merges; today it does not, which is how two
+independent defects sat undetected. Filed as BUG-0005.
+
+### Next steps
+
+1. Review + merge. No `cargo publish` needed; this changes no published API.
+2. If #12 has not merged, `deny` will be red here too — that is the pre-existing
+   `main` condition, not this branch.
+3. Remaining pre-existing debt, untouched: `cargo deny` duplicate-version (29)
+   and wildcard-dependency (17) warnings; `cargo fmt` drift is now gone as a
+   side effect of the style-edition bump.

@@ -111,6 +111,12 @@ condition that CI re-checks (`scripts/ci_guard.py` checks 5 and 6), so a
 waiver cannot outlive its own justification. See `SECURITY.md`, `BUGS.md`
 BUG-0002 / BUG-0003, and the advisory-waiver rule in `MEMORY.md`.
 
+**Toolchain (2026-09-30):** pinned to **1.98.1** in `rust-toolchain.toml` and
+in all seven CI jobs, enforced by `ci_guard.py` check 4 so the two cannot
+drift. The workspace is on **edition 2024**. See `MEMORY.md` for why a pin only
+one of the two files knows about is not a pin, and why the CI action ref is
+`@master` with an explicit `toolchain:` input rather than `@stable`.
+
 v0.1 specification drop + Phase 1 complete + Phase 2 Stages 1-12
 complete + Phase 3 Stages 1-11 complete. Workspace skeleton, deep
 specs, toolchain config, real `src/` content for ALL 20 crates,

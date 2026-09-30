@@ -286,3 +286,28 @@ than a comment. `scripts/ci_guard.py`:
 `rumqttc` reaches the vulnerable `rustls-webpki` only on its own broker TLS
 paths (`themql-mqtt`). The `better-auth` path in `themql-desktop` already
 resolves to the patched `rustls-webpki 0.103.14` via `rustls 0.23.45`.
+
+## Toolchain and edition posture (2026-09-30)
+
+The workspace is pinned to **Rust 1.98.1** and on **edition 2024**.
+
+Pinning is a supply-chain control, not a convenience. A floating `stable` in CI
+means a new compiler release can change build and lint behaviour with no change
+in the repository — so a reviewer sees a red pipeline with an empty diff, and
+the change that caused it is not attributable to any commit. `ci_guard.py`
+check 4 asserts the pin in `rust-toolchain.toml` and every CI job name the same
+exact version, and rejects a floating channel in either, because a pin only one
+of the two knows about is not a pin.
+
+The edition 2024 migration was checked for unsafe-surface exposure before it
+started: no `no_mangle` / `export_name` / `link_section`, no file-scope
+`static mut`, no bare `gen` identifier, no `unsafe fn`, and no `extern "C"`
+across ~18k lines. There was therefore no FFI shim or unsafe block to rework,
+and the only semantic change was `collapsible_if` becoming a let-chain.
+
+The embedded `no_std` target (`thumbv7em-none-eabihf`) is a safety-relevant
+build for vehicle-facing code. It had stopped compiling — see `BUGS.md`
+BUG-0004 — because `format!` and `f64::sqrt` need explicit `alloc` imports and a
+trait in scope under `no_std`, and `themql-gnc` was missing the `num-traits`
+dependency outright. Those are production `health_check` paths, so the artifact
+could not be produced. The rules are now written down in `MEMORY.md`.

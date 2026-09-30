@@ -736,10 +736,12 @@ mod tests {
         let report = v.validate(&a).expect("validate");
         assert!(report.hash_ok);
         assert!(!report.schema_ok);
-        assert!(report
-            .errors
-            .iter()
-            .any(|e| matches!(e, ArtifactError::SchemaMismatch { .. })));
+        assert!(
+            report
+                .errors
+                .iter()
+                .any(|e| matches!(e, ArtifactError::SchemaMismatch { .. }))
+        );
     }
 
     #[test]

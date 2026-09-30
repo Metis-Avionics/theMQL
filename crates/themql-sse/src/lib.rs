@@ -407,12 +407,12 @@ impl SseStream for TokioSseStream {
 // axum HTTP server — GET /events -> text/event-stream
 // ===========================================================================
 
+use axum::Router;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::sse::{Event as AxumEvent, KeepAlive, Sse};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
-use axum::Router;
 use futures_util::stream::{self, Stream};
 use std::convert::Infallible;
 use std::task::{Context, Poll};

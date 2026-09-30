@@ -296,3 +296,12 @@ executed by the lead opencode agent directly; no subagents were spawned.
 - Files touched: `Cargo.lock`, `deny.toml`, `crates/themql-desktop/src/main.rs`, `scripts/ci_guard.py`, `scripts/check-advisory-rationales.sh` (new), living docs
 - Conflicts / overlaps: concurrent `cargo check -p degoyle` from `/tmp/opencode/wt-readiness` exhausted this 6 GB box and OOM-killed a themql-desktop test link; assertions moved from a Rust test into the Python guard to avoid linking polars/tch at all
 - Follow-up: BUG-0002 (rumqttc webpki pin) and BUG-0003 (better-auth/jsonwebtoken major) are open and blocked upstream; both auto-detect their own unblock
+
+### 2026-09-30 — opencode/space-bunny-free — no subagents this turn
+
+- Subagent(s): none
+- Task: pin the toolchain to 1.98.1 and migrate the workspace to edition 2024
+- Outcome: pin enforced in file + all 7 CI jobs + `ci_guard` check 4; 22 let-chain conversions; 28 reformats; and the pre-existing `embedded-check` red fixed (BUG-0004)
+- Files touched: `rust-toolchain.toml`, `.github/workflows/ci.yml`, `Cargo.toml`, `scripts/ci_guard.py`, `.gitignore`, 20 crate sources, living docs
+- Conflicts / overlaps: the edition bump reformatted two files that already had `cargo fmt` drift on `main` (`themql-estimation`, `themql-gnc`); unavoidable once the style edition changes, and no longer debt
+- Follow-up: BUG-0005 open — `main` CI was red for four runs and a red `main` does not block merges, which is how two independent defects went unnoticed

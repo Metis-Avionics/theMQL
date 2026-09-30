@@ -12,11 +12,7 @@ fn finite_f64(max: f64) -> impl Strategy<Value = f64> {
     (-max..max).prop_filter_map(
         "finite",
         move |v| {
-            if v.is_finite() {
-                Some(v)
-            } else {
-                None
-            }
+            if v.is_finite() { Some(v) } else { None }
         },
     )
 }

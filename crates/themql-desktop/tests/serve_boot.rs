@@ -19,7 +19,7 @@ use themql_graphql::{
     DispatchBridgeImpl, GraphqlResolverBridgeImpl, GraphqlSchema, GraphqlSchemaImpl,
     GraphqlSubscriptionSource, MutationRoot, QueryRoot, SubscriptionRoot,
 };
-use themql_sse::{serve_sse_with_publisher, TokioSsePublisher};
+use themql_sse::{TokioSsePublisher, serve_sse_with_publisher};
 
 use std::future::Future;
 use std::pin::Pin;
