@@ -493,3 +493,40 @@ real backends (see Phase 3 progress above). Follow-ups (not blockers):
   precise reasons. See `SECURITY.md` "Dependabot Alert Dismissal
   Rationale" for the full table. GitHub UI dismissal is a manual
   follow-up.
+
+### Advisory-waiver rule (added 2026-09-30)
+
+A `deny.toml` `ignore` entry is a waiver, and a waiver is only acceptable if it
+carries three things. "Not reachable" on its own is not a reason.
+
+1. **The proof** — why the advisory cannot bite. Not a category ("unused"),
+   but the specific fact, with the code path or the lock line.
+2. **The blocker** — why no action available today fixes it. Distinguish
+   "we chose not to" from "we cannot": a semver-major fix blocked behind an
+   upstream dependency is a *blocker*, and naming it is what makes the waiver
+   reviewable.
+3. **The unblock condition** — the exact, checkable event that retires the
+   waiver: a specific crate version requiring a specific version of another.
+
+Conditions 3 is machine-checkable, so it is checked:
+`scripts/check-advisory-rationales.sh` runs as `ci_guard.py` check 6 and exits
+non-zero once a condition is met. A config comment cannot notice its own
+condition being satisfied; a script can.
+
+**Corollary for reachability claims.** When a waiver rests on "the vulnerable
+code path is not reachable", the reachability is itself an invariant and gets
+a guard, not a comment. `ci_guard.py` check 5 is the worked example: the
+`jsonwebtoken` authz-bypass advisory is ignored because no JWT plugin is
+registered, so the guard fails if a JWT marker appears in the auth builder, if
+the plugin count changes, or if `enable_auth` stops defaulting to off. The
+`auth_secret` help text used to call itself a "JWT session signing" key, which
+would have walked the next maintainer into exactly that — a stale doc comment
+is how a guarded invariant gets un-guarded.
+
+### Box capacity: do not link themql-desktop tests locally (added 2026-09-30)
+
+`themql-desktop` pulls polars and tch. Linking its test binary OOM-killed this
+6 GB box even at `-j 2` — the peak is one rustc/link process, not the job
+count. Static assertions about the desktop crate's source belong in
+`scripts/ci_guard.py`, which is what checks 5 and 6 are. If a behavioural test
+really needs that binary, run it in CI, not here.

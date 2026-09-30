@@ -100,6 +100,17 @@ historical artifacts. After every turn, the agent updates them (see
 
 ## Status
 
+**Advisory posture (2026-09-30):** `cargo deny check` no longer errors.
+`RUSTSEC-2026-0285` (`rustls` 0.23.43, TLS 1.3 encryption-level confusion) is
+fixed via 0.23.45. Five advisories remain waived in `deny.toml` — four
+`rustls-webpki` ones that are **unfixable** because every `rumqttc` release
+through 0.25.1 pins the unpatched `^0.102` line, and one `jsonwebtoken`
+authorization bypass that is **unreachable** because no JWT plugin is
+registered. Each waiver carries a proof, a named blocker, and an unblock
+condition that CI re-checks (`scripts/ci_guard.py` checks 5 and 6), so a
+waiver cannot outlive its own justification. See `SECURITY.md`, `BUGS.md`
+BUG-0002 / BUG-0003, and the advisory-waiver rule in `MEMORY.md`.
+
 v0.1 specification drop + Phase 1 complete + Phase 2 Stages 1-12
 complete + Phase 3 Stages 1-11 complete. Workspace skeleton, deep
 specs, toolchain config, real `src/` content for ALL 20 crates,

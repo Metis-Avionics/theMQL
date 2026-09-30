@@ -122,3 +122,56 @@ None.
 
 365 tests pass. Full validation green: fmt, check, test, clippy, deny,
 TOML sanity, metadata, cross-compile (thumbv7em-none-eabihf).
+
+---
+
+## Current session
+
+- Date: 2026-09-30
+- Mode: maintain
+- Agent: opencode (space-bunny-free)
+- Branch: `fix/advisories-webpki-jwt` (off main)
+- Toolchain: Rust 1.98.1
+
+## Just-completed turn
+
+Advisory remediation across the workspace.
+
+- **Fixed** `RUSTSEC-2026-0285`: `rustls 0.23.43` -> `0.23.45` (TLS 1.3
+  encryption-level boundary confusion). This was a hard `cargo deny check`
+  failure; it is now cleared. Also `chacha20 0.10.1` -> `0.10.2` (yanked).
+- **Investigated, not waived vaguely**, the 4 `rustls-webpki` advisories.
+  Root cause is an upstream pin, not our config: every `rumqttc` release
+  through 0.25.1 requires `rustls-webpki "^0.102"`, and the 0.102 line has no
+  patched release (0.102.8 is the last), so `cargo update` cannot converge and
+  `[patch.crates-io]` is semver-rejected.
+- **Investigated** the `jsonwebtoken` authorization-bypass advisory.
+  `better-auth 0.10.0` requires `jsonwebtoken "^9"`, so the patched 10.3.0 is
+  unreachable without a semver-major bump. Confirmed the code path is not
+  reachable (email/password plugin only, opaque session tokens, auth opt-in).
+- Replaced prose waivers with blocks carrying a proof, a blocker, and a
+  machine-checked unblock condition. Removed the stale `lru` waiver
+  (`RUSTSEC-2026-0002`; `lru` is 0.18.2, already patched).
+- Fixed the `auth_secret` help text, which wrongly called itself a JWT signing
+  key and would have led a maintainer to make the ignored advisory reachable.
+- Added `scripts/check-advisory-rationales.sh` and checks 5 + 6 in
+  `scripts/ci_guard.py`.
+
+## Verification
+
+- `cargo deny check` — 0 errors (was 1 `error[vulnerability]`). Remaining
+  output is warnings only: pre-existing duplicate-version and wildcard
+  dependency notices.
+- `python3 scripts/ci_guard.py` — 5/5 OK, including the 2 new checks.
+- **Negative-tested both new guards** by injection: registering a JWT plugin,
+  bumping `jsonwebtoken` to major 10, and removing `rustls-webpki 0.102.x` from
+  the lock each make `ci_guard.py` exit non-zero with a specific message. Tree
+  restored green afterwards. A guard never observed failing is decoration.
+
+## Environment note
+
+A concurrent `cargo check -p degoyle` from `/tmp/opencode/wt-readiness`
+exhausted this 6 GB box and OOM-killed a `themql-desktop` test link even at
+`-j 2`; the peak is one link process, not the job count. The desktop static
+assertions were moved out of a Rust test and into the Python guard, which
+needs no linking at all. Recorded as a standing rule in `MEMORY.md`.
