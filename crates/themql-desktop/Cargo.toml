@@ -19,7 +19,6 @@ themql-schema.workspace = true
 themql-training = { workspace = true, optional = true }
 themql-mqtt.workspace = true
 better-auth.workspace = true
-apalis.workspace = true
 clap = { workspace = true, features = ["derive"] }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "net", "io-util", "signal"] }
 ratatui = { workspace = true }
