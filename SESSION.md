@@ -131,6 +131,10 @@ TOML sanity, metadata, cross-compile (thumbv7em-none-eabihf).
 - Mode: maintain
 - Agent: opencode (space-bunny-free)
 - Branch: `fix/advisories-webpki-jwt` (off main)
+
+- Mode: build
+- Agent: opencode (space-bunny-free)
+- Branch: `feat/error-code-authz-notfound-conflict` (off main)
 - Toolchain: Rust 1.98.1
 
 ## Just-completed turn
@@ -222,3 +226,33 @@ Pin the toolchain, migrate to edition 2024, and fix the embedded target.
   that lock bump.
 - `cargo machete`/`deny` duplicate-version and wildcard warnings are untouched
   pre-existing debt.
+
+Breaking `ErrorCode` extension (0.1.0 → 0.2.0):
+
+- Added `NotFound`, `AuthorizationError`, `Conflict` to `ErrorCode`, with
+  `Error::{not_found, authorization_error, conflict}` constructors.
+- Each separates an outcome that must not be collapsed with a neighbour; the
+  authorization case is the load-bearing one, since a denial reported as
+  `ResolverError` is indistinguishable from an outage and one reported as
+  `CacheMiss` invites an authority retry.
+- `specs/core.toml` `[types.ErrorCode]` updated in the same change, plus a new
+  `[types.ErrorCode.separation_rule]` naming `AuthorizationError` as the
+  fail-closed match target.
+- New `crates/themql-core/tests/error_code_wire_contract.rs` (10 tests). The
+  central one asserts the variant→wire-string map is **injective**, so no
+  transport projection can collapse two codes back into one.
+
+## Verification
+
+- `cargo check --workspace --all-targets` — clean (all 19 crates; the variant
+  addition breaks no exhaustive `match` in the workspace)
+- `cargo clippy -p themql-core --all-targets -- -D warnings` — 0 warnings
+- `cargo test -p themql-core` — 49 passed (31 inline + 10 new + 7 proptest + 1)
+- `cargo fmt -p themql-core`
+
+## In-flight / follow-up
+
+- Not yet published to crates.io. DeGoyle consumes `themql-core` as a pinned
+  registry release, so the swap is only unblocked after `cargo publish` of
+  `themql-core 0.2.0`.
+- DeGoyle side is tracked in its own issue/PR (ADR-064, risk-control calculus).

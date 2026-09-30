@@ -323,3 +323,23 @@ phase that will address them:
 - Follow-up: worth deciding whether a red `main` should block merges. Today it
   does not, and both this and BUG-0004 were found by accident rather than by
   process.
+
+### BUG-0001: `ErrorCode` could not express an authorization denial
+
+- Severity: High (fail-closed correctness)
+- Status: RESOLVED 2026-09-30 — branch `feat/error-code-authz-notfound-conflict`
+- Detail: `ErrorCode` had 6 variants and no `AuthorizationError`, so a policy
+  denial could only be reported as `ResolverError` — making a revoked grant
+  indistinguishable from a domain failure — or as `CacheMiss`, which invites a
+  retry that the authority would then answer on the caller's behalf. Discovered
+  downstream while ruling the DeGoyle risk-control calculus boundary: the
+  `degoyle_mql_core` reconstruction already carried 9 variants, so upstream was
+  behind the consumer it was meant to replace.
+- Also fixed in the same change: `NotFound` (a fact about the data) had no code
+  distinct from `CacheMiss` (a fact about the lookup path), and `Conflict` (a
+  lost CAS race) had none distinct from `ValidationError` (a malformed input).
+- Resolution: 3 variants + 3 constructors added, `specs/core.toml` updated in
+  the same change with a `[types.ErrorCode.separation_rule]`, and an
+  injectivity test over the wire-string map so the collapse cannot reappear at a
+  transport projection. Workspace moved to `0.2.0` (breaking for exhaustive
+  `match`).

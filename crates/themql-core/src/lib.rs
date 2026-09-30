@@ -1130,6 +1130,30 @@ impl Response {
 
 /// Canonical error code. Transport adapters project this into
 /// GraphQL errors, MQTT error topics, SSE error frames, etc.
+///
+/// # Why `NotFound`, `AuthorizationError` and `Conflict` exist
+///
+/// These three are not convenience aliases. Each separates two outcomes that
+/// must never be collapsed, because collapsing them turns a fail-closed
+/// decision into an indistinguishable one:
+///
+/// - `NotFound` vs [`ErrorCode::CacheMiss`]: an authoritative store that holds
+///   no such entity is a *fact about the data*; a cache miss is a fact about
+///   the *lookup path*. A caller that retries a `CacheMiss` against the
+///   authority must not silently succeed-as-empty on a `NotFound`.
+/// - `AuthorizationError` vs [`ErrorCode::ResolverError`]: a denial is a
+///   deliberate, audited policy outcome. A resolver that fails is a bug or a
+///   dependency fault. Reporting a denial as `ResolverError` makes a revoked
+///   grant indistinguishable from a domain failure, so an operator cannot tell
+///   an attack from an outage.
+/// - `Conflict` vs [`ErrorCode::ValidationError`]: a compare-and-set that lost
+///   the race is a retryable outcome, not an invalid input. Sharing a code with
+///   `ValidationError` would tell the caller its input was wrong when its
+///   input was fine and merely stale.
+///
+/// Callers that must fail closed on a denial should match
+/// [`ErrorCode::AuthorizationError`] and must not fall through to the
+/// authority on it; see `specs/core.toml` `[types.ErrorCode]`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ErrorCode {
@@ -1139,10 +1163,16 @@ pub enum ErrorCode {
     ResolverError,
     /// Authoritative miss and no resolver.
     CacheMiss,
+    /// The named resource does not exist at the authoritative store.
+    NotFound,
     /// Input failed validation.
     ValidationError,
+    /// The principal is not permitted to perform this operation.
+    AuthorizationError,
     /// Deadline exceeded.
     Timeout,
+    /// A concurrent modification lost the compare-and-set race.
+    Conflict,
     /// Unexpected internal failure.
     InternalError,
 }
@@ -1153,8 +1183,11 @@ impl fmt::Display for ErrorCode {
             Self::TransportError => "transport_error",
             Self::ResolverError => "resolver_error",
             Self::CacheMiss => "cache_miss",
+            Self::NotFound => "not_found",
             Self::ValidationError => "validation_error",
+            Self::AuthorizationError => "authorization_error",
             Self::Timeout => "timeout",
+            Self::Conflict => "conflict",
             Self::InternalError => "internal_error",
         };
         f.write_str(s)
@@ -1212,16 +1245,44 @@ impl Error {
         Self::new(ErrorCode::CacheMiss, msg)
     }
 
+    /// Construct a not-found error.
+    ///
+    /// Use this when the authoritative store positively holds no such
+    /// entity, which is a different fact from a [`Self::cache_miss`].
+    #[must_use]
+    pub fn not_found(msg: impl Into<String>) -> Self {
+        Self::new(ErrorCode::NotFound, msg)
+    }
+
     /// Construct a validation error.
     #[must_use]
     pub fn validation_error(msg: impl Into<String>) -> Self {
         Self::new(ErrorCode::ValidationError, msg)
     }
 
+    /// Construct an authorization error.
+    ///
+    /// This is a policy denial, not a resolver failure. Callers that fail
+    /// closed on denial must match on it rather than treating it as a miss
+    /// and retrying against the authority.
+    #[must_use]
+    pub fn authorization_error(msg: impl Into<String>) -> Self {
+        Self::new(ErrorCode::AuthorizationError, msg)
+    }
+
     /// Construct a timeout error.
     #[must_use]
     pub fn timeout(msg: impl Into<String>) -> Self {
         Self::new(ErrorCode::Timeout, msg)
+    }
+
+    /// Construct a conflict error.
+    ///
+    /// Signals a lost compare-and-set race. The input was well-formed; it
+    /// was merely stale, so the caller may re-read and retry.
+    #[must_use]
+    pub fn conflict(msg: impl Into<String>) -> Self {
+        Self::new(ErrorCode::Conflict, msg)
     }
 
     /// Construct an internal error.

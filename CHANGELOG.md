@@ -5,6 +5,32 @@ Update after every turn (see `MEMORY.md` standing rules).
 
 ## [Unreleased]
 
+### 2026-09-30 — Breaking: `ErrorCode` gains `NotFound`, `AuthorizationError`, `Conflict`
+
+`themql-core` `ErrorCode` goes from 6 variants to 9. Each addition separates
+two outcomes that must never be collapsed, because collapsing them makes a
+fail-closed decision indistinguishable from an ordinary one:
+
+| New variant | Separated from | Why they must differ |
+|---|---|---|
+| `NotFound` | `CacheMiss` | a fact about the **data** (the authority holds no such entity) vs a fact about the **lookup path** (no resolver). A caller that retries a `CacheMiss` against the authority must not read a `NotFound` as succeed-as-empty. |
+| `AuthorizationError` | `ResolverError` | a deliberate, audited **policy denial** vs a domain fault or dependency failure. Reporting a denial as `ResolverError` makes a revoked grant indistinguishable from an outage. |
+| `Conflict` | `ValidationError` | a lost compare-and-set race is **retryable**; a malformed input is not. Sharing a code tells the caller its input was wrong when it was fine and merely stale. |
+
+- `specs/core.toml` `[types.ErrorCode]` updated in the same change, including a
+  new `[types.ErrorCode.separation_rule]` making `AuthorizationError` the
+  fail-closed match target that must not fall through to the authority.
+- New `Error::{not_found, authorization_error, conflict}` constructors,
+  matching the existing constructor shape.
+- Wire strings: `not_found`, `authorization_error`, `conflict`.
+- New `crates/themql-core/tests/error_code_wire_contract.rs` — 10 tests, the
+  load-bearing one being that the variant→wire-string map is **injective**, so
+  no projection into GraphQL/MQTT/SSE can collapse a denial into a miss.
+
+**Breaking:** adding enum variants breaks downstream exhaustive `match`
+statements. This is why the workspace moves `0.1.0` → `0.2.0`. The full
+19-crate workspace was verified to compile unchanged.
+
 ### 2026-08-20 — Phase 9: core runtime closures
 
 Third phase of the 7-phase sweep. Closes several mid-size spec gaps.

@@ -456,19 +456,42 @@ enum ErrorCode {
     TransportError,
     ResolverError,
     CacheMiss,
+    NotFound,
     ValidationError,
+    AuthorizationError,
     Timeout,
+    Conflict,
     InternalError,
 }
 """
 serde = "as a lowercase snake_case string"
 
+# Each of the three 0.2.0 additions separates an outcome that must never be
+# collapsed into a neighbouring code. Collapsing any pair makes a fail-closed
+# decision indistinguishable from an ordinary one:
+#   NotFound           vs CacheMiss       — a fact about the DATA, not the LOOKUP
+#   AuthorizationError vs ResolverError  — a policy DENIAL, not a domain fault
+#   Conflict           vs ValidationError — the input was stale, not invalid
+[types.ErrorCode.separation_rule]
+fail_closed_on = "AuthorizationError"
+rule = """
+A caller that must fail closed on an authorization denial matches
+ErrorCode::AuthorizationError and MUST NOT fall through to the authoritative
+store on it. A denial is an audited policy outcome; reporting it as
+ResolverError makes a revoked grant indistinguishable from a dependency
+outage, and reporting it as CacheMiss would invite a retry that the authority
+would then answer on the caller's behalf.
+"""
+
 [types.Error.codes]
 transport_error = "transport-level failure"
 resolver_error = "resolver could not fulfil the query"
 cache_miss = "authoritative miss and no resolver"
+not_found = "the named resource does not exist at the authoritative store"
 validation_error = "input failed validation"
+authorization_error = "the principal is not permitted to perform this operation"
 timeout = "deadline exceeded"
+conflict = "a concurrent modification lost the compare-and-set race"
 internal_error = "unexpected internal failure"
 
 # ---------------------------------------------------------------------------

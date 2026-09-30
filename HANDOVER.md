@@ -1029,3 +1029,35 @@ independent defects sat undetected. Filed as BUG-0005.
 3. Remaining pre-existing debt, untouched: `cargo deny` duplicate-version (29)
    and wildcard-dependency (17) warnings; `cargo fmt` drift is now gone as a
    side effect of the style-edition bump.
+
+## Handover from: opencode (space-bunny-free), 2026-09-30 (breaking `ErrorCode` extension, 0.1.0 → 0.2.0)
+
+### State
+
+- Branch `feat/error-code-authz-notfound-conflict`, off `main`, unmerged.
+- `ErrorCode` extended 6 → 9 variants: `NotFound`, `AuthorizationError`,
+  `Conflict` added, with matching constructors and a fail-closed
+  `separation_rule` written into `specs/core.toml`.
+- New wire-contract test asserts the variant→wire-string map is injective.
+
+### Why this was done here rather than downstream
+
+The DeGoyle project (`DeGoyle/TheThing`, a separate org) is planning a
+risk-control calculus subsystem and evaluates whether to adopt `themql-core`
+from crates.io instead of its in-tree `degoyle_mql_core` reconstruction. That
+evaluation hit a hard blocker: upstream had no `AuthorizationError`, so the
+swap could not express a policy denial, and ADR-063's I-AUTH rule (authorize
+the stored value, then project; a denied hit is an error, never a fall-through)
+depends on that variant. `degoyle_mql_core` already carried 9 variants, so
+upstream was behind the consumer it was meant to replace. Since the same
+org owns both repos, the fix belongs here.
+
+### Next steps
+
+1. Review + merge the branch. It is a **breaking** change (`0.1.0` → `0.2.0`)
+   because adding enum variants breaks downstream exhaustive `match`.
+2. `cargo publish` `themql-core 0.2.0`. Until this lands on crates.io, DeGoyle
+   cannot consume it — it takes a pinned registry release, and its supply-chain
+   gate (`deny.toml` `allow-git = []`) rejects a git or path dependency.
+3. The other 17 workspace members are still unpublished. DeGoyle only needs
+   `themql-core`; publishing the rest is a separate decision, not a blocker.

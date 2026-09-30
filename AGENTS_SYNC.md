@@ -305,3 +305,12 @@ executed by the lead opencode agent directly; no subagents were spawned.
 - Files touched: `rust-toolchain.toml`, `.github/workflows/ci.yml`, `Cargo.toml`, `scripts/ci_guard.py`, `.gitignore`, 20 crate sources, living docs
 - Conflicts / overlaps: the edition bump reformatted two files that already had `cargo fmt` drift on `main` (`themql-estimation`, `themql-gnc`); unavoidable once the style edition changes, and no longer debt
 - Follow-up: BUG-0005 open — `main` CI was red for four runs and a red `main` does not block merges, which is how two independent defects went unnoticed
+
+### 2026-09-30 16:55 — opencode/space-bunny-free — no subagents this turn
+
+- Subagent(s): none
+- Task: add `NotFound` / `AuthorizationError` / `Conflict` to `ErrorCode`
+- Outcome: 3 new variants, 3 constructors, spec updated, 10 new wire-contract tests
+- Files touched: `crates/themql-core/src/lib.rs`, `crates/themql-core/tests/error_code_wire_contract.rs`, `specs/core.toml`, `Cargo.toml`, living docs
+- Conflicts / overlaps: none
+- Follow-up: DeGoyle `living.toml` still records the themql-core crates.io swap as deferred pending upstream 0.2.0 — 0.2.0 is now in this branch and unblocks that review
