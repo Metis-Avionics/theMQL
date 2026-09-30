@@ -86,9 +86,15 @@ struct ServeArgs {
     /// Whether to enable GraphQL session auth via `better-auth`.
     #[arg(long, default_value_t = false)]
     enable_auth: bool,
-    /// Auth secret for JWT session signing (>= 32 chars). Can also be
+    /// Signing secret for the session layer (>= 32 chars). Can also be
     /// set via `THEMQL_AUTH_SECRET` env var. Per `specs/auth.toml
     /// [authn.graphql]`, must not appear in source.
+    ///
+    /// This is NOT a JWT signing key. No JWT-issuing plugin is registered
+    /// (see the builder below: `EmailPasswordPlugin` only), and sessions are
+    /// opaque `session_` tokens. Registering a JWT plugin would make the
+    /// ignored advisory GHSA-h395-gr6q-cpjc reachable;
+    /// `tests/auth_reachability.rs` fails if one is ever added.
     #[arg(long)]
     auth_secret: Option<String>,
 }

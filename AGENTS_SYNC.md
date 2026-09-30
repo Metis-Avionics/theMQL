@@ -287,3 +287,12 @@ executed by the lead opencode agent directly; no subagents were spawned.
 - No subagents this turn. All 4 steps (per-request authz, dependabot
   remediation + lru dedup, real sensor drivers, embedded MQTT)
   implemented directly. Single PR (#8), 4 commits.
+
+### 2026-09-30 16:30 — opencode/space-bunny-free — no subagents this turn
+
+- Subagent(s): none
+- Task: remediate cargo-deny / Dependabot advisories in theMQL
+- Outcome: RUSTSEC-2026-0285 fixed (rustls 0.23.45); 4 webpki + 1 jsonwebtoken advisories converted from prose waivers to machine-checked blocks; 2 new CI guards
+- Files touched: `Cargo.lock`, `deny.toml`, `crates/themql-desktop/src/main.rs`, `scripts/ci_guard.py`, `scripts/check-advisory-rationales.sh` (new), living docs
+- Conflicts / overlaps: concurrent `cargo check -p degoyle` from `/tmp/opencode/wt-readiness` exhausted this 6 GB box and OOM-killed a themql-desktop test link; assertions moved from a Rust test into the Python guard to avoid linking polars/tch at all
+- Follow-up: BUG-0002 (rumqttc webpki pin) and BUG-0003 (better-auth/jsonwebtoken major) are open and blocked upstream; both auto-detect their own unblock

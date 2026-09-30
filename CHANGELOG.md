@@ -1659,3 +1659,60 @@ before writing by splitting model creation from model execution:
   payload generation for telemetry (no serde_json — minimal deps)
 - Telemetry task updated to format payloads each cycle
 - 4 new tests (365 total)
+### 2026-09-30 — Advisory remediation: RUSTSEC-2026-0285 fixed, 5 remaining ignores made provable
+
+**Fixed**
+
+- `RUSTSEC-2026-0285` — `rustls 0.23.43` → `0.23.45`. TLS 1.3 handshake
+  messages were incorrectly accepted across encryption-level boundaries.
+  This was a hard `cargo deny check` failure and is now cleared. The lock
+  already carried the patched `rustls-webpki 0.103.14` via this copy; only
+  the `rustls` version itself was behind.
+- `chacha20 0.10.1` → `0.10.2`, removing a yanked-crate warning.
+
+**Not fixable today — recorded as blocked, not waived vaguely**
+
+- `RUSTSEC-2026-0049` / `0098` / `0099` / `0104` — `rustls-webpki 0.102.8`,
+  via `rumqttc`. All four are fixed only in `>= 0.103.10/12/13`, and **there
+  is no patched 0.102.x**: 0.102.8 is the last release on that line, so the
+  fixes were never backported. Verified against the crates.io index: the
+  newest `rumqttc` is 0.25.1, and **every** `rumqttc` release from 0.19
+  onward requires `rustls-webpki "^0.102"`, which cannot resolve to 0.103.
+  No `rumqttc` release requires 0.103. So `cargo update` cannot fix this and
+  a `[patch.crates-io]` to 0.103.x is rejected by cargo as
+  semver-incompatible. The lock carries both lines: `rustls 0.23.45`
+  (better-auth) already uses the patched `0.103.14`; only rumqttc's copy is
+  affected.
+  **Unblock:** a rumqttc release requiring `rustls-webpki >= 0.103.13`.
+- `GHSA-h395-gr6q-cpjc` — `jsonwebtoken 9.3.1` type confusion in `nbf`/`exp`
+  validation, which can lead to an **authorization bypass**. `better-auth
+  0.10.0` requires `jsonwebtoken "^9"`, which cannot resolve to the patched
+  `10.3.0`; this is a semver major, not a lock update. Not reachable here
+  (see below). **Unblock:** `better-auth >= 1.0.0-alpha.3`, which requires
+  `jsonwebtoken "^11"`. Taking an alpha dependency on a 0.x crate is a
+  deliberate decision, not a side effect of a security bump, so it is not
+  done unilaterally.
+
+**Reachable-vs-unreachable is now enforced, not asserted**
+
+The old deny.toml entries said "not reachable" in prose. Prose cannot notice
+when it stops being true, and one of these is an authorization bypass.
+
+- The `auth_secret` help text claimed it was a "JWT session signing" key.
+  That is wrong — no JWT plugin is registered — and it would have led the
+  next maintainer straight into making the advisory reachable. Corrected.
+- New `scripts/check-advisory-rationales.sh` re-checks each ignore's unblock
+  condition and exits non-zero when one is met.
+- New checks 5 and 6 in `scripts/ci_guard.py`:
+  - **5** fails if the auth builder references a JWT marker, if the plugin
+    count is no longer exactly one, if `enable_auth` stops defaulting to
+    false, if the ignore and the guard disagree, or if the locked
+    `jsonwebtoken` reaches the patched major.
+  - **6** delegates to the advisory-rationale checker.
+- Stale ignore `RUSTSEC-2026-0002` (`lru`) removed: `lru` is 0.18.2, already
+  patched, so the waiver was only suppressing noise.
+
+These run in the Python guard rather than a linked test binary because
+`themql-desktop` pulls polars and tch, and linking its test binary is a real
+cost on a small builder. All three failure paths were proven by injection.
+

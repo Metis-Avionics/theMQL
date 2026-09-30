@@ -251,3 +251,38 @@ All 6 are ignored in `deny.toml` with precise reasons.
 **GitHub UI dismissal:** Dependabot does not read `deny.toml`; the 6
 alerts must be manually dismissed in the GitHub Security tab using
 "Dismiss alert → Tolerable risk" with the rationale above.
+
+## Advisory posture (2026-09-30)
+
+`cargo deny check` no longer fails: `RUSTSEC-2026-0285` (`rustls` 0.23.43 TLS
+1.3 encryption-level confusion) was fixed by moving to 0.23.45, and the
+yanked `chacha20 0.10.1` to 0.10.2.
+
+Five advisories remain under `deny.toml` waiver. None is a reachability shrug;
+each is either provably unreachable or provably unfixable today, and each
+carries an unblock condition that CI re-checks.
+
+| Advisory | Crate | Status | Unblock |
+|---|---|---|---|
+| RUSTSEC-2026-0049 / 0098 / 0099 / 0104 | `rustls-webpki` 0.102.8 | **Unfixable** — no patched 0.102.x exists; every `rumqttc` release through 0.25.1 pins `^0.102` | a rumqttc release requiring `rustls-webpki >= 0.103.13` |
+| GHSA-h395-gr6q-cpjc | `jsonwebtoken` 9.3.1 | **Unreachable** — no JWT plugin registered; sessions are opaque; auth is opt-in | `better-auth >= 1.0.0-alpha.3` (`jsonwebtoken ^11`) |
+
+**Waivers in this repo must be machine-checked.** A waiver that rests on
+reachability is asserting an invariant, so the invariant gets a guard rather
+than a comment. `scripts/ci_guard.py`:
+
+- **check 5** — the `jsonwebtoken` authorization-bypass advisory stays
+  unreachable. Fails if the auth builder references a JWT marker, if the
+  registered plugin count is no longer exactly one, if `enable_auth` stops
+  defaulting to `false`, if the waiver and the guard disagree, or if the
+  locked `jsonwebtoken` reaches the patched major. This exists because the
+  `auth_secret` help text once described itself as a JWT signing key, which
+  would have walked the next maintainer into making the ignored advisory
+  reachable.
+- **check 6** — re-checks each waiver's unblock condition
+  (`scripts/check-advisory-rationales.sh`) and fails the build once one is
+  met, so a waiver cannot outlive its own justification.
+
+`rumqttc` reaches the vulnerable `rustls-webpki` only on its own broker TLS
+paths (`themql-mqtt`). The `better-auth` path in `themql-desktop` already
+resolves to the patched `rustls-webpki 0.103.14` via `rustls 0.23.45`.

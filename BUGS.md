@@ -233,3 +233,56 @@ phase that will address them:
   dismissal in the GitHub Security tab is required.
 - **lru duplicate-version warning**: Resolved by bumping themql-cache
   from lru 0.12.5 to 0.18.2 (deduped with ratatui's transitive 0.18.2).
+
+### BUG-0002: 4 rustls-webpki advisories unfixable behind rumqttc
+
+- Severity: High (four advisories, no available fix)
+- Status: OPEN — blocked upstream
+- Detail: `RUSTSEC-2026-0049` (CRL Distribution Point matching),
+  `RUSTSEC-2026-0098` (URI name constraints), `RUSTSEC-2026-0099` (wildcard
+  name constraints) and `RUSTSEC-2026-0104` (CRL BIT STRING panic / DoS) all
+  affect `rustls-webpki 0.102.8`, which enters the lock through `rumqttc`.
+  All four are fixed only in `>= 0.103.10/12/13`, and the 0.102 line received
+  no patch at all — 0.102.8 is its final release, so there is nothing to bump
+  to within the line.
+- Root cause: `rumqttc` pins `rustls-webpki "^0.102"`. Verified against the
+  crates.io index: newest is 0.25.1, and every release from 0.19 onward carries
+  the same `^0.102` requirement. No rumqttc release requires 0.103, so
+  `cargo update` cannot converge, and `[patch.crates-io]` to 0.103.x is
+  rejected as semver-incompatible. This is an upstream pin, not a
+  misconfiguration on our side.
+- Mitigating: the lock carries both lines. `rustls 0.23.45` (better-auth)
+  already resolves to the patched `rustls-webpki 0.103.14`; only rumqttc's own
+  TLS paths reach the vulnerable copy. rumqttc is used by `themql-mqtt` for
+  broker connections.
+- Detection: `scripts/check-advisory-rationales.sh` (CI guard check 6) fails
+  the build as soon as a rumqttc release moves to `rustls-webpki >= 0.103.13`,
+  so this cannot quietly outlive its own justification.
+- Filed 2026-09-30 while remediating Dependabot alerts.
+
+### BUG-0003: jsonwebtoken authorization-bypass advisory blocked behind better-auth
+
+- Severity: High (authorization bypass) / Low (reachability)
+- Status: OPEN — blocked upstream, not reachable in current configuration
+- Detail: `GHSA-h395-gr6q-cpjc` — `jsonwebtoken` type confusion in `nbf`/`exp`
+  validation that can lead to an authorization bypass. Locked at 9.3.1;
+  fixed in 10.3.0.
+- Root cause: `better-auth 0.10.0` requires `jsonwebtoken "^9"`, which cannot
+  resolve to 10.x. This is a semver-major bump, so no lock update reaches it.
+  `better-auth 1.0.0-alpha.3` requires `jsonwebtoken "^11"` (patched) but is a
+  pre-release, and taking an alpha dependency on a 0.x crate is a deliberate
+  decision rather than a side effect of a security bump.
+- Why it is not reachable: the only plugin registered on the `BetterAuth`
+  builder is `EmailPasswordPlugin`; no JWT-issuing plugin exists. Sessions are
+  opaque `session_` tokens (`SessionManager::extract_session_token` is
+  mirrored, not reimplemented as JWT validation). GraphQL session auth is
+  opt-in — `enable_auth` defaults to `false`.
+- Latent hazard found and fixed: the `auth_secret` CLI help described itself
+  as an "Auth secret for JWT session signing", which is inaccurate and would
+  have led the next maintainer to register a JWT plugin and make the advisory
+  reachable without realizing it. Help text corrected.
+- Detection: `scripts/ci_guard.py` check 5 fails if a JWT marker appears in
+  the auth builder, if the plugin count is no longer exactly one, if
+  `enable_auth` stops defaulting to false, or if the locked `jsonwebtoken`
+  reaches major 10 (at which point the ignore is stale and must be dropped).
+- Filed 2026-09-30 while remediating Dependabot alerts.

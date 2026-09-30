@@ -964,3 +964,36 @@ None. Awaiting user direction.
 - Manually dismiss 6 GitHub dependabot alerts using SECURITY.md text
 - Fuzzing harness + secret-management policy
 - tch-backend feature tests on beefier environment
+
+---
+
+## Handover from: opencode (space-bunny-free), 2026-09-30 (advisory remediation)
+
+### State
+
+- Branch `fix/advisories-webpki-jwt`, off `main`, unmerged.
+- `cargo deny check` no longer errors. `RUSTSEC-2026-0285` fixed via
+  `rustls 0.23.45`; yanked `chacha20` moved to 0.10.2.
+- Five advisories remain waived, each with a proof, a named blocker, and a
+  machine-checked unblock condition. Two are open bugs (BUG-0002, BUG-0003).
+- Two new CI guards enforce that those waivers stay honest.
+
+### The two things a reviewer should push back on if they disagree
+
+1. **We did not bump `better-auth` to 1.0.0-alpha.3** even though it would
+   clear the `jsonwebtoken` authorization-bypass advisory. Reasoning: it is a
+   pre-release of a 0.x crate, and taking an alpha dependency is a deliberate
+   architectural decision, not a side effect of a security bump. The advisory
+   is not reachable in the current configuration, and check 5 now fails if that
+   ever changes. If you would rather clear it now, that is a reasonable call —
+   it just needs to be a conscious one.
+2. **We did not force `rustls-webpki 0.103.x` via `[patch.crates-io]`.** Cargo
+   rejects it as semver-incompatible with `^0.102`, so it is not a mechanism we
+   have, not a policy choice.
+
+### Next steps
+
+1. Review + merge.
+2. No `cargo publish` needed for this branch; it changes no published API.
+3. Remaining `cargo deny` warnings (29 duplicate-version, 17 wildcard) are
+   pre-existing and out of scope here. They are real debt but a separate pass.
