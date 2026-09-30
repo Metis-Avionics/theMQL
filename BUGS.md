@@ -286,3 +286,40 @@ phase that will address them:
   `enable_auth` stops defaulting to false, or if the locked `jsonwebtoken`
   reaches major 10 (at which point the ignore is stale and must be dropped).
 - Filed 2026-09-30 while remediating Dependabot alerts.
+
+### BUG-0004: `embedded-check` CI job was red — no_std targets did not compile
+
+- Severity: High (the embedded binary did not build; the gate that should have
+  caught it was failing and nobody attributed it)
+- Status: RESOLVED 2026-09-30 — branch `chore/pin-toolchain-1.98.1-edition-2024`
+- Detail: `cargo check -p themql-embedded --target thumbv7em-none-eabihf` failed
+  on `main`. Three causes, all in `no_std` **production** code rather than
+  tests, so the embedded artifact could not be produced at all:
+  1. `themql-estimation` and `themql-gnc` call `format!` while importing only
+     `String` / `ToString` / `Vec` from `alloc`. `format!` is not in the
+     `no_std` prelude and needs its own `use alloc::format;`.
+  2. `themql-gnc::health_check` calls `.sqrt()` on an `f64`, which has no
+     inherent `no_std` implementation and needs `num_traits::real::Real` in
+     scope.
+  3. `themql-gnc` did not depend on `num-traits` at all, so (2) could not be
+     fixed by an import. Added with the `libm` feature, mirroring
+     `themql-estimation`, which already hit the identical constraint and
+     already had the dependency.
+- Detection: this was the `embedded-check` CI job, which was **failing and
+  unexamined**. The last four consecutive `main` runs were red.
+- Resolution: imports added and the dependency declared. `embedded-check` is
+  green. Recorded in `MEMORY.md` so the `no_std` import rules are written down
+  rather than rediscovered by the next agent.
+
+### BUG-0005: CI was red on main for an unexamined reason
+
+- Severity: Medium (process)
+- Status: OPEN
+- Detail: the last four consecutive `main` CI runs failed. At least two
+  independent causes: this `embedded-check` breakage (BUG-0004, now fixed) and
+  `RUSTSEC-2026-0285` in the `deny` job (fixed in PR #12). A red gate that
+  nobody attributes accumulates, because each new run looks like the same
+  known-red and gets the same non-attention.
+- Follow-up: worth deciding whether a red `main` should block merges. Today it
+  does not, and both this and BUG-0004 were found by accident rather than by
+  process.

@@ -155,7 +155,8 @@ def check_jsonwebtoken_advisory_still_unreachable() -> list[str]:
     if "GHSA-h395-gr6q-cpjc" not in deny:
         errors.append(
             "  GHSA-h395-gr6q-cpjc is no longer ignored, but this reachability guard "
-            "still exists. If the dependency was genuinely fixed, delete check 5; if "
+            "still exists. If the dependency was genuinely fixed, delete "
+            "check_jsonwebtoken_advisory_still_unreachable; if "
             "the ignore was removed by mistake, `cargo deny check advisories` will fail."
         )
 
@@ -164,8 +165,63 @@ def check_jsonwebtoken_advisory_still_unreachable() -> list[str]:
     if m and int(m.group(1)) >= 10:
         errors.append(
             f"  jsonwebtoken major is {m.group(1)}, at or above the patched 10.3.0. "
-            f"Remove GHSA-h395-gr6q-cpjc from deny.toml and delete check 5."
+            f"Remove GHSA-h395-gr6q-cpjc from deny.toml and delete "
+            f"check_jsonwebtoken_advisory_still_unreachable."
         )
+
+def check_toolchain_pin() -> list[str]:
+    """`rust-toolchain.toml` and every CI job must install the same toolchain.
+
+    A pin only one of the two knows about is not a pin. If the file says
+    1.98.1 and CI installs `stable`, CI is not testing the pinned compiler, so
+    a green CI says nothing about the pin — and the failure it would eventually
+    cause (a new stable release reddening a branch with no diff) is invisible
+    in review, because the diff that caused it is not in the tree.
+    """
+    errors: list[str] = []
+
+    tc = REPO_ROOT / "rust-toolchain.toml"
+    if not tc.exists():
+        return ["  rust-toolchain.toml not found; the toolchain is not pinned"]
+
+    m = re.search(r'^\s*channel\s*=\s*"([^"]+)"', tc.read_text(), re.M)
+    if not m:
+        return ["  no `channel = \"...\"` in rust-toolchain.toml"]
+    pinned = m.group(1)
+
+    if pinned in {"stable", "beta", "nightly", "master"}:
+        errors.append(
+            f"  rust-toolchain.toml pins the floating channel '{pinned}'. Pin an exact "
+            f"version, or a new release changes the compiler under the repository."
+        )
+
+    ci = REPO_ROOT / ".github" / "workflows" / "ci.yml"
+    if not ci.exists():
+        return errors + ["  .github/workflows/ci.yml not found"]
+
+    lines = ci.read_text().splitlines()
+    steps = _toolchain_steps(lines)
+    if not steps:
+        return errors + ["  no dtolnay/rust-toolchain step found in ci.yml"]
+
+    for step in steps:
+        found = step.get("toolchain")
+        if found is None:
+            errors.append(
+                f"  CI toolchain step (line {step['line']}) declares no `toolchain:`. "
+                f"Without it the action installs its own default (stable) and silently "
+                f"ignores rust-toolchain.toml, so CI is not testing the pinned compiler."
+            )
+        elif found in {"stable", "beta", "nightly", "master"}:
+            errors.append(
+                f"  CI toolchain step (line {step['line']}) installs the floating channel "
+                f"'{found}' while rust-toolchain.toml pins '{pinned}'."
+            )
+        elif found != pinned:
+            errors.append(
+                f"  CI toolchain step (line {step['line']}) installs '{found}' but "
+                f"rust-toolchain.toml pins '{pinned}'."
+            )
 
     return errors
 
@@ -195,6 +251,56 @@ def check_advisory_unblock_conditions() -> list[str]:
         "  An advisory ignore in deny.toml is STALE (its unblock condition is now met):",
         *(f"    {line}" for line in proc.stdout.strip().splitlines()),
     ]
+
+def _toolchain_steps(lines: list[str]) -> list[dict]:
+    """Extract each `dtolnay/rust-toolchain` step and its `with:` inputs.
+
+    Parsed line-by-line rather than with one regex on purpose. A regex such as
+    ``-\\s*uses:\\s*dtolnay/...\\n((?:\\s+with:...)+)`` looks correct and is
+    wrong: `\\s` matches newlines, so the greedy group swallows the rest of the
+    file into the first step's body. Every later job then goes unchecked while
+    the check still reports success. A guard that silently stops guarding is
+    worse than no guard, because it is trusted.
+
+    A step's `with:` block is every following line indented deeper than the
+    `- uses:` line, minus blank lines and comments.
+    """
+    steps: list[dict] = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        m = re.match(r"^(\s*)- uses:\s*dtolnay/rust-toolchain@(\S+)\s*$", line)
+        if not m:
+            i += 1
+            continue
+
+        step = {"line": i + 1, "ref": m.group(2)}
+        parsed: set[str] = set()
+        base_indent = len(m.group(1))
+
+        j = i + 1
+        while j < len(lines):
+            nxt = lines[j]
+            if not nxt.strip() or nxt.lstrip().startswith("#"):
+                j += 1
+                continue
+            indent = len(nxt) - len(nxt.lstrip())
+            if indent <= base_indent:
+                break
+            km = re.match(r"^\s*([A-Za-z_][\w-]*):\s*(\S+)?\s*$", nxt)
+            # `parsed`, not `not in step`: the step dict is pre-seeded with
+            # bookkeeping keys, and a membership test against it would refuse
+            # to fill in `toolchain` — the one value this function exists to
+            # read.
+            if km and km.group(1) not in parsed:
+                step[km.group(1)] = km.group(2)
+                parsed.add(km.group(1))
+            j += 1
+
+        steps.append(step)
+        i = j if j > i + 1 else i + 1
+
+    return steps
 
 
 def main() -> int:
@@ -230,6 +336,10 @@ def main() -> int:
     errors = check_jsonwebtoken_advisory_still_unreachable()
     if errors:
         print("FAIL: jsonwebtoken advisory is reachable or its guard is stale:")
+
+    errors = check_toolchain_pin()
+    if errors:
+        print("FAIL: Toolchain pin has drifted:")
         for e in errors:
             print(e)
         all_errors.extend(errors)
@@ -244,6 +354,8 @@ def main() -> int:
         all_errors.extend(errors)
     else:
         print("OK: Advisory ignore unblock conditions are still unmet.")
+
+        print("OK: Toolchain is pinned and CI matches rust-toolchain.toml.")
 
     if all_errors:
         print(f"\n{len(all_errors)} error(s) found.")

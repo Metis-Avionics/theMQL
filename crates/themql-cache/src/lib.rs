@@ -551,22 +551,22 @@ impl<S: Storage> TieredCache<S> {
     /// tier it was found in. On a hit at a lower tier, promotes the
     /// entry to all higher tiers that miss.
     async fn get_inner(&self, key: &CacheKey) -> Result<CacheHit, CacheError> {
-        if let Some(l1) = &self.l1 {
-            if let Some(entry) = l1.get(key) {
-                return Ok(CacheHit::Hit {
-                    value: entry,
-                    source_tier: CacheTier::L1,
-                });
-            }
+        if let Some(l1) = &self.l1
+            && let Some(entry) = l1.get(key)
+        {
+            return Ok(CacheHit::Hit {
+                value: entry,
+                source_tier: CacheTier::L1,
+            });
         }
-        if let Some(l2) = &self.l2 {
-            if let Some(entry) = l2.get(key) {
-                self.promote(key, &entry, CacheTier::L2);
-                return Ok(CacheHit::Hit {
-                    value: entry,
-                    source_tier: CacheTier::L2,
-                });
-            }
+        if let Some(l2) = &self.l2
+            && let Some(entry) = l2.get(key)
+        {
+            self.promote(key, &entry, CacheTier::L2);
+            return Ok(CacheHit::Hit {
+                value: entry,
+                source_tier: CacheTier::L2,
+            });
         }
         if let Some(l3) = &self.l3 {
             match l3.get(key).await {
@@ -600,15 +600,16 @@ impl<S: Storage> TieredCache<S> {
     fn promote(&self, key: &CacheKey, entry: &CacheEntry, from: CacheTier) {
         let mut promoted = entry.clone();
         promoted.source_tier = from;
-        if from != CacheTier::L1 {
-            if let Some(l1) = &self.l1 {
-                l1.put(key.clone(), promoted.clone());
-            }
+        if from != CacheTier::L1
+            && let Some(l1) = &self.l1
+        {
+            l1.put(key.clone(), promoted.clone());
         }
-        if from != CacheTier::L1 && from != CacheTier::L2 {
-            if let Some(l2) = &self.l2 {
-                l2.put(key.clone(), promoted);
-            }
+        if from != CacheTier::L1
+            && from != CacheTier::L2
+            && let Some(l2) = &self.l2
+        {
+            l2.put(key.clone(), promoted);
         }
     }
 
@@ -618,10 +619,10 @@ impl<S: Storage> TieredCache<S> {
     async fn put_inner(&self, key: &CacheKey, entry: &CacheEntry, policy: &CachePolicy) {
         let entry_size = serde_json::to_vec(entry).map_or(0, |v| v.len());
         let skip_l1 = entry_size > L1_DEMOTION_THRESHOLD;
-        if let Some(l1) = &self.l1 {
-            if !skip_l1 {
-                l1.put(key.clone(), entry.clone());
-            }
+        if let Some(l1) = &self.l1
+            && !skip_l1
+        {
+            l1.put(key.clone(), entry.clone());
         }
         if let Some(l2) = &self.l2 {
             l2.put(key.clone(), entry.clone());
@@ -682,23 +683,21 @@ impl<S: Storage> Cache for TieredCache<S> {
     async fn invalidate_pattern(&self, pattern: &SubjectPattern) -> Result<(), CacheError> {
         if let Some(l1) = &self.l1 {
             for key in l1.keys() {
-                if let Some(subject_str) = l1.subject_for_key(&key) {
-                    if let Ok(subject) = Subject::from_str(&subject_str) {
-                        if pattern.matches(&subject) {
-                            l1.invalidate(&key);
-                        }
-                    }
+                if let Some(subject_str) = l1.subject_for_key(&key)
+                    && let Ok(subject) = Subject::from_str(&subject_str)
+                    && pattern.matches(&subject)
+                {
+                    l1.invalidate(&key);
                 }
             }
         }
         if let Some(l2) = &self.l2 {
             for key in l2.keys() {
-                if let Some(subject_str) = l2.subject_for_key(&key) {
-                    if let Ok(subject) = Subject::from_str(&subject_str) {
-                        if pattern.matches(&subject) {
-                            l2.invalidate(&key);
-                        }
-                    }
+                if let Some(subject_str) = l2.subject_for_key(&key)
+                    && let Ok(subject) = Subject::from_str(&subject_str)
+                    && pattern.matches(&subject)
+                {
+                    l2.invalidate(&key);
                 }
             }
         }
@@ -948,12 +947,11 @@ mod tests {
         );
         let pattern = SubjectPattern::from_str("vehicle.sensors.#").unwrap();
         for key in l1.keys() {
-            if let Some(subject_str) = l1.subject_for_key(&key) {
-                if let Ok(subject) = Subject::from_str(&subject_str) {
-                    if pattern.matches(&subject) {
-                        l1.invalidate(&key);
-                    }
-                }
+            if let Some(subject_str) = l1.subject_for_key(&key)
+                && let Ok(subject) = Subject::from_str(&subject_str)
+                && pattern.matches(&subject)
+            {
+                l1.invalidate(&key);
             }
         }
         assert!(l1.get(&k1).is_none(), "k1 invalidated by pattern");

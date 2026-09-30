@@ -15,6 +15,11 @@ std = ["dep:themql-core", "thiserror/std"]
 [dependencies]
 themql-core = { workspace = true, optional = true }
 nalgebra = { version = "0.35", default-features = false, features = ["libm"] }
+# `health_check` calls `.sqrt()` on an f64, which in `no_std` requires a trait
+# in scope. `nalgebra`'s `libm` feature does not re-export one, so `Real` comes
+# from num-traits exactly as it does in themql-estimation. Without this the
+# embedded target does not compile — see the `embedded-check` CI job.
+num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 thiserror = { version = "2", default-features = false }
 
 [dev-dependencies]

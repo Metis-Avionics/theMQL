@@ -561,10 +561,10 @@ impl RumqttcTransport {
         let Ok(handlers) = self.handlers.lock() else {
             return;
         };
-        if let Some(id) = self.matching_subscription(topic, &handlers) {
-            if let Some(handler) = handlers.get(&id) {
-                drop(handler.handle(&msg));
-            }
+        if let Some(id) = self.matching_subscription(topic, &handlers)
+            && let Some(handler) = handlers.get(&id)
+        {
+            drop(handler.handle(&msg));
         }
     }
 
@@ -610,12 +610,12 @@ fn matches_filter(filter: &str, topic: &str) -> bool {
 impl MqttPublisher for RumqttcTransport {
     async fn publish(&self, topic: &Subject, payload: &Message) -> Result<(), MqttError> {
         let topic_str = subject_to_topic(topic);
-        if let Some(acl) = &self.acl {
-            if !acl.permits(AclAction::Publish, &topic_str) {
-                return Err(MqttError::PublishFailed(format!(
-                    "ACL denied publish on topic '{topic_str}'"
-                )));
-            }
+        if let Some(acl) = &self.acl
+            && !acl.permits(AclAction::Publish, &topic_str)
+        {
+            return Err(MqttError::PublishFailed(format!(
+                "ACL denied publish on topic '{topic_str}'"
+            )));
         }
         let bytes = encode_message(payload)?;
         self.client
@@ -626,12 +626,12 @@ impl MqttPublisher for RumqttcTransport {
 
     async fn publish_retained(&self, topic: &Subject, payload: &Message) -> Result<(), MqttError> {
         let topic_str = subject_to_topic(topic);
-        if let Some(acl) = &self.acl {
-            if !acl.permits(AclAction::Publish, &topic_str) {
-                return Err(MqttError::PublishFailed(format!(
-                    "ACL denied publish on topic '{topic_str}'"
-                )));
-            }
+        if let Some(acl) = &self.acl
+            && !acl.permits(AclAction::Publish, &topic_str)
+        {
+            return Err(MqttError::PublishFailed(format!(
+                "ACL denied publish on topic '{topic_str}'"
+            )));
         }
         let bytes = encode_message(payload)?;
         self.client
@@ -649,12 +649,12 @@ impl MqttSubscriber for RumqttcTransport {
     ) -> Result<SubscriptionId, MqttError> {
         let id = SubscriptionId::new(self.next_id.fetch_add(1, Ordering::SeqCst));
         let topic_str = subject_to_topic(topic);
-        if let Some(acl) = &self.acl {
-            if !acl.permits(AclAction::Subscribe, &topic_str) {
-                return Err(MqttError::SubscribeFailed(format!(
-                    "ACL denied subscribe on topic '{topic_str}'"
-                )));
-            }
+        if let Some(acl) = &self.acl
+            && !acl.permits(AclAction::Subscribe, &topic_str)
+        {
+            return Err(MqttError::SubscribeFailed(format!(
+                "ACL denied subscribe on topic '{topic_str}'"
+            )));
         }
         self.client
             .subscribe(topic_str.clone(), RumqttcQos::AtLeastOnce)
@@ -984,16 +984,18 @@ mod tests {
         let acl = observer_acl();
         let cfg = RumqttcConfig::new("broker.local", 1883, "themql-1").with_acl(acl);
         assert!(cfg.acl.is_some());
-        assert!(cfg
-            .acl
-            .as_ref()
-            .unwrap()
-            .permits(AclAction::Subscribe, "vehicle.events"));
-        assert!(!cfg
-            .acl
-            .as_ref()
-            .unwrap()
-            .permits(AclAction::Publish, "vehicle.events"));
+        assert!(
+            cfg.acl
+                .as_ref()
+                .unwrap()
+                .permits(AclAction::Subscribe, "vehicle.events")
+        );
+        assert!(
+            !cfg.acl
+                .as_ref()
+                .unwrap()
+                .permits(AclAction::Publish, "vehicle.events")
+        );
     }
 
     #[test]

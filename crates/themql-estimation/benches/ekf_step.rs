@@ -2,7 +2,7 @@
 //!
 //! Covers `SPEC.toml [quality] benchmark_hot_paths = true`.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use themql_estimation::{BarometerReading, Ekf, Estimator, GpsReading, ImuReading};
 
 fn bench_ekf_predict(c: &mut Criterion) {

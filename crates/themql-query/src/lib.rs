@@ -333,20 +333,21 @@ where
                     return Err(Error::timeout("deadline expired"));
                 }
             }
-            if let Some(cache) = &cache {
-                if ctx.cache_policy.enabled && !ctx.cache_policy.bypass {
-                    let key = keyer.key(&query_clone);
-                    if let Some(response) = cache.get(&key).await? {
-                        return Ok(response);
-                    }
+            if let Some(cache) = &cache
+                && ctx.cache_policy.enabled
+                && !ctx.cache_policy.bypass
+            {
+                let key = keyer.key(&query_clone);
+                if let Some(response) = cache.get(&key).await? {
+                    return Ok(response);
                 }
             }
             let response = resolver.resolve(&query_clone, &ctx_clone).await?;
-            if let Some(cache) = &cache {
-                if ctx.cache_policy.enabled {
-                    let key = keyer.key(&query_clone);
-                    let _ = cache.put(key, response.clone()).await;
-                }
+            if let Some(cache) = &cache
+                && ctx.cache_policy.enabled
+            {
+                let key = keyer.key(&query_clone);
+                let _ = cache.put(key, response.clone()).await;
             }
             Ok(response)
         }

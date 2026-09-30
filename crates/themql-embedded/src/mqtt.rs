@@ -12,9 +12,9 @@
 //! the hot path. Functions ≤ 60 lines. No dynamic allocation after init.
 
 #[cfg(any(target_os = "none", test))]
-use crate::sensors::types::heap_string;
-#[cfg(any(target_os = "none", test))]
 use crate::SensorError;
+#[cfg(any(target_os = "none", test))]
+use crate::sensors::types::heap_string;
 
 /// TX buffer size for the MQTT session. Must accommodate the largest
 /// outbound packet (PUBLISH with topic + JSON payload ≤ 256 bytes +

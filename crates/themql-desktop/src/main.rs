@@ -517,26 +517,24 @@ async fn resolve_role_from_headers(
 /// but operates on `axum::http::HeaderMap` directly (the upstream
 /// extractor takes `AuthRequest`, which is not available here).
 fn extract_session_token(headers: &axum::http::HeaderMap, cookie_name: &str) -> Option<String> {
-    if let Some(auth_header) = headers.get(axum::http::header::AUTHORIZATION) {
-        if let Ok(auth_str) = auth_header.to_str() {
-            if let Some(token) = auth_str.strip_prefix("Bearer ") {
-                if !token.is_empty() {
-                    return Some(token.to_owned());
-                }
-            }
-        }
+    if let Some(auth_header) = headers.get(axum::http::header::AUTHORIZATION)
+        && let Ok(auth_str) = auth_header.to_str()
+        && let Some(token) = auth_str.strip_prefix("Bearer ")
+        && !token.is_empty()
+    {
+        return Some(token.to_owned());
     }
 
-    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
-        if let Ok(cookie_str) = cookie_header.to_str() {
-            for part in cookie_str.split(';') {
-                let part = part.trim();
-                let prefix = format!("{cookie_name}=");
-                if let Some(value) = part.strip_prefix(&prefix) {
-                    if !value.is_empty() {
-                        return Some(value.to_owned());
-                    }
-                }
+    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE)
+        && let Ok(cookie_str) = cookie_header.to_str()
+    {
+        for part in cookie_str.split(';') {
+            let part = part.trim();
+            let prefix = format!("{cookie_name}=");
+            if let Some(value) = part.strip_prefix(&prefix)
+                && !value.is_empty()
+            {
+                return Some(value.to_owned());
             }
         }
     }
@@ -637,7 +635,7 @@ async fn train(args: &TrainArgs) -> Result<(), themql_core::Error> {
             other => {
                 return Err(themql_core::Error::validation_error(format!(
                     "unknown trainer kind: {other}"
-                )))
+                )));
             }
         };
 
@@ -765,12 +763,11 @@ fn tui_main() -> io::Result<()> {
     let mut terminal = ratatui::init();
     loop {
         terminal.draw(draw_dashboard)?;
-        if event::poll(Duration::from_millis(100))? {
-            if let Event::Key(key) = event::read()? {
-                if key.code == KeyCode::Char('q') || key.code == KeyCode::Esc {
-                    break;
-                }
-            }
+        if event::poll(Duration::from_millis(100))?
+            && let Event::Key(key) = event::read()?
+            && (key.code == KeyCode::Char('q') || key.code == KeyCode::Esc)
+        {
+            break;
         }
     }
     ratatui::restore();
