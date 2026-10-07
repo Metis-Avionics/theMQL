@@ -4,6 +4,55 @@ Handover notes for the next agent/session. Fold in-flight items from
 `SESSION.md` here when a session ends. Update after every turn (see
 `MEMORY.md` standing rules).
 
+## Handover from: opencode-glm, 2026-10-07 (COMPLETE: all 20 crates live at 0.2.0)
+
+### Final state
+
+**All 20 `themql-*` crates are live on crates.io at 0.2.0** — the 0.1.0
+release was finished by the fixed-interval publisher (18/20 by Sep 14) and
+the remaining two (`themql-desktop`, `themql-embedded`) had never been
+published. Today everything was (re)published at 0.2.0 because main @
+`b74626f` (#11) moved the workspace to 0.2.0 with the breaking 9-variant
+`ErrorCode`, and PR #15's self-dep `version = "0.2.0"` reqs make any 0.1.x
+addition incompatible. Publish order was the dependency leaf order in
+`scripts/publish_crates.sh`; every crate verified live via the registry API
+afterwards (max_version = 0.2.0 for all 20).
+
+### What landed today, via PRs
+
+| PR | Content | Disposition |
+|---|---|---|
+| #15 | PR #10 rebased onto post-#11 main; self-dep version reqs aligned to 0.2.0 | MERGED, all 9 checks green |
+| #10 | original crates.io packaging (stale index) | CLOSED superseded by #15 |
+
+### Gate reds fixed to get #15 green
+
+- `cargo deny`: RUSTSEC-2026-0285 was already fixed on main (`b14ae41`) — the
+  rebase cleared it; nothing to do here.
+- `cross-check thumbv7em`: was failing on missing self-dep version reqs in
+  `themql-embedded`'s direct `../` deps (aligned to 0.2.0 in a312333).
+- `CI guard script` + `TOML parse`: pass (they were red on the stale index only).
+- `cargo machete`: clean.
+
+### Verification boundary
+
+- Local: clippy --workspace --all-targets -D warnings clean; cargo test
+  --workspace 412/412 (host constrained to -j2, see TheThing AGENTS.md §8 for
+  the memory-ceiling record); fmt clean; guard green.
+- Authoritative: CI run on #15 head 9/9 green.
+
+### Next steps
+
+1. TheThing side: TheThing/vendor decision can now cite exact versions —
+   `themql-core` 0.2.0 (9-variant ErrorCode) instead of the vendored-copy
+   diff; see TheThing living.toml vendored-commit comment.
+2. `scripts/publish_crates.sh` VERSION grep reads the root `^version` line —
+   still correct post-0.2.0; no change needed.
+3. Per-crate READMEs are now committed (landed with #15) — no
+   uncommitted-tree publishing remains.
+
+---
+
 ## Handover from: opencode (muse-spark) + publish subagent, 2026-09-14 (crates.io publish in progress — 10/20 live, PR #10 open)
 
 ### Repository state at handover
