@@ -19,6 +19,30 @@ Update after every turn (see `MEMORY.md` standing rules).
 
 ## Log
 
+### 2026-09-14 — opencode → general subagent (fixed-interval crates.io publisher)
+
+- Subagent(s): 1 general subagent (task `ses_f6076af5affeQr89K8xgNJ6GC2`)
+- Task: take over background crates.io publishing — stop the old
+  429-backoff loop, start `scripts/publish_crates.sh all` detached,
+  verify it, report back promptly (not wait ~2.5h for completion).
+- Outcome: old loop (PID 2459737, sleeping in 429 backoff) killed;
+  new detached loop started (PID 2483485,
+  log `/tmp/opencode/publish-fixed.log`). Verified 8 crates skipped
+  as already-live + real themql-sse attempt (themql-sse has since
+  published — 9/20 live at lead's final check). Subagent disclosed and
+  fixed a load-bearing script bug: `is_published()` used bare
+  `curl -sf`, but crates.io returns 403 without an explicit
+  User-Agent, so the check always failed and the loop would have
+  re-published themql-core + slept 720s forever. Fixed with
+  `curl -A "theMQL-publish-script/0.1.0"` (verified 200 on live /
+  404 on unpublished), syntax-checked, loop restarted.
+- Files touched: `scripts/publish_crates.sh` (1-line curl fix by
+  subagent; verified by lead via Read).
+- Conflicts / overlaps: none (old loop stopped before new one
+  started; single publisher at a time).
+- Follow-up: monitor `/tmp/opencode/publish-fixed.log` until all 20
+  report live; see HANDOVER.md 2026-09-14 entry.
+
 ### 2026-08-20 — no subagents this turn (Phase 9 core runtime closures)
 
 Phase 9 (third phase of the 7-phase sweep on

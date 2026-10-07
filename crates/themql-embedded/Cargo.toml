@@ -3,6 +3,12 @@ name = "themql-embedded"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description.workspace = true
+repository.workspace = true
+documentation.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [[bin]]
 name = "themql-embedded"
@@ -17,8 +23,8 @@ embedded-alloc.workspace = true
 static_cell.workspace = true
 minimq.workspace = true
 embedded-io-async.workspace = true
-themql-gnc = { path = "../themql-gnc", default-features = false }
-themql-estimation = { path = "../themql-estimation", default-features = false }
+themql-gnc = { version = "0.1.0", path = "../themql-gnc", default-features = false }
+themql-estimation = { version = "0.1.0", path = "../themql-estimation", default-features = false }
 nalgebra = { version = "0.35", default-features = false, features = ["libm"] }
 
 [dependencies]

@@ -4,6 +4,73 @@ Handover notes for the next agent/session. Fold in-flight items from
 `SESSION.md` here when a session ends. Update after every turn (see
 `MEMORY.md` standing rules).
 
+## Handover from: opencode (muse-spark) + publish subagent, 2026-09-14 (crates.io publish in progress — 8/20 live)
+
+### Repository state at handover
+
+- v0.1.0 crates.io release underway. **9/20 crates live**:
+  themql-core, themql-schema, themql-runtime, themql-message,
+  themql-query, themql-artifact, themql-storage, themql-telemetry,
+  themql-sse.
+- **11 remain** (dependency order): themql-mqtt,
+  themql-gnc, themql-estimation, themql-transport, themql-cache,
+  themql-graphql, themql-analysis, themql-inference,
+  themql-training, themql-desktop, themql-embedded.
+- Publish metadata committed to the working tree but **not
+  committed to git** (no-implicit-commit rule): root
+  `[workspace.package]` description/repository/documentation/
+  homepage/keywords/categories + per-crate `.workspace = true`
+  inheritance + `version = "0.1.0"` on all internal path deps
+  (incl. themql-embedded's two direct `../` deps). New file:
+  `scripts/publish_crates.sh` (executable).
+- Detached fixed-interval publisher running:
+  `bash scripts/publish_crates.sh all`, PID 2483485 at handoff,
+  log `/tmp/opencode/publish-fixed.log`, one crate per 720s,
+  429 retry-after handling, idempotent (skips live versions).
+  ETA for all 20: ~13:20 UTC 2026-09-14.
+- Validation before publish was all green: `cargo fmt --check`,
+  `cargo check --workspace`, `cargo test --workspace` (0 failures),
+  `cargo clippy --workspace --all-targets -- -D warnings`,
+  `cargo metadata`, TOML sanity.
+- BUG-0009 open: rust-toolchain.toml `miri`-on-stable breaks the
+  rustup proxy; workaround is pinned-toolchain PATH (baked into
+  the publish script).
+
+### What is done this turn
+
+- Publish blockers fixed (metadata + versions, see CHANGELOG.md
+  2026-09-14 entry for the full list).
+- 9 crates published with `--allow-dirty` in dependency order
+  (a 10th+ may have landed since — check the fixed log).
+- `scripts/publish_crates.sh` written (`all`/`next` modes,
+  `PUBLISH_INTERVAL`, cron example in header).
+- Background subagent (`ses_f6076af5affeQr89K8xgNJ6GC2`) stopped
+  the old backoff loop, started the fixed-interval loop detached,
+  and fixed a load-bearing bug (crates.io 403 without User-Agent
+  made `is_published()` always false → would have looped forever
+  on themql-core). Fix verified by lead via Read.
+- All 8 living docs updated.
+
+### What is NOT done (next agent)
+
+- **Monitor the detached publisher**: `tail -n 30
+  /tmp/opencode/publish-fixed.log`. Confirm each remaining crate
+  prints `SUCCESS`. If the process died, restart with `cd
+  /home/leo/theMQL && setsid nohup bash
+  scripts/publish_crates.sh all >
+  /tmp/opencode/publish-fixed.log 2>&1 < /dev/null &`
+  (single publisher only — check `ps aux | grep publish_crates`).
+- **Verify all 20 live**: `curl -sf -A "ua"
+  https://crates.io/api/v1/crates/<name>/0.1.0` per crate
+  (bare curl 403s — User-Agent required).
+- Decide commit strategy for the publish-metadata Cargo.toml
+  changes + `scripts/publish_crates.sh` (user has not asked for a
+  commit).
+- Consider BUG-0009 fix (drop `miri` from stable components or pin
+  `channel`), without breaking `cargo +nightly miri test`.
+- Registry token lives in `~/.cargo/credentials.toml` (outside the
+  repo) — never commit it.
+
 ## Handover from: opencode (glm-5.2:cloud), 2026-08-20 (Rust 1.98.0 toolchain drift fix — unblocks PR #7)
 
 ### Repository state at handover

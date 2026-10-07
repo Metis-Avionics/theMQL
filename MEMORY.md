@@ -72,6 +72,14 @@ deliberate, not an oversight.
   DefaultQueryExecutor orchestrator, real EmbassyRuntime::sleep,
   StubThedafAdapter, MQTT retained messages, apalis JobQueue stub;
   402 tests pass workspace-wide)
+- crates.io: v0.1.0 publishing in progress since 2026-09-14 — 9/20
+  live (core, schema, runtime, message, query, artifact, storage,
+  telemetry, sse); remaining 11 via detached fixed-interval publisher
+  (`scripts/publish_crates.sh all`, log
+  `/tmp/opencode/publish-fixed.log`, ~12 min/crate, ETA ~13:20 UTC
+  2026-09-14). All manifests carry workspace-inherited
+  description/repository/documentation/homepage/keywords/categories;
+  all internal path deps carry `version = "0.1.0"`.
 - Language: Rust
 - License: MIT
 - Repository: https://github.com/RAliane-REBORN/theMQL
@@ -81,6 +89,14 @@ deliberate, not an oversight.
 
 ### Toolchain notes
 
+- **rustup-proxy breakage (BUG-0009, open since 2026-09-14)**:
+  `rust-toolchain.toml` requests the `miri` component on the
+  tracking `stable` channel; current stable no longer ships miri,
+  so every proxied `cargo`/`rustc` in the repo tries and fails to
+  sync. Workaround: `PATH="$HOME/.rustup/toolchains/1.98.0-
+  x86_64-unknown-linux-gnu/bin:$PATH"` (baked into
+  `scripts/publish_crates.sh`). Fix candidates: drop `miri` from
+  stable components or pin `channel` to a dated stable.
 - **Rust 1.98.0** introduced clippy lint `unused_async_trait_impl`
   (fires on `async fn` in trait impls with no `.await`) AND
   `manual_async_fn` (fires on `fn -> impl Future` with `async move`
@@ -283,6 +299,18 @@ on theDAF. the embedded binary must not depend on theDAF.
 
 ## Decision log (chronological)
 
+- 2026-09-14: crates.io publishing started (v0.1.0). Added
+  workspace-inherited publish metadata (description from SPEC.toml,
+  repository/documentation/homepage, keywords, categories) and
+  `version = "0.1.0"` on all internal path deps (cargo publish
+  requirement). Published 8 leaves first in dependency order under
+  the crates.io new-crate 429 rate limit. Remaining 12 publish via
+  detached `scripts/publish_crates.sh all` (fixed 720s interval,
+  idempotent crates.io check, 429 retry-after handling). Lessons:
+  (1) rust-toolchain.toml `miri`-on-stable breaks the rustup proxy
+  (BUG-0009) — bypass with pinned-toolchain PATH; (2) crates.io API
+  needs an explicit User-Agent or it 403s (fixed in the script).
+  Published with `--allow-dirty` per the no-implicit-commit rule.
 - 2026-08-20: Phase 7 complete — doc + spec-deviation cleanup. Fixed 3
   spec deviations: (1) `RollbackHandle.previous_model: TrainedModel`
   (was `Vec<u8>`); `restore() -> Result<TrainedModel, InferenceError>`
