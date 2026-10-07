@@ -110,26 +110,26 @@ criterion = { version = "0.5", features = ["async_tokio"] }
 # Internal crates — self-references for cross-crate deps via workspace=true
 # version is required alongside path so `cargo publish` can rewrite
 # the requirement to the crates.io version on packaging.
-themql-core = { version = "0.1.0", path = "crates/themql-core" }
-themql-schema = { version = "0.1.0", path = "crates/themql-schema" }
-themql-message = { version = "0.1.0", path = "crates/themql-message" }
-themql-query = { version = "0.1.0", path = "crates/themql-query" }
-themql-runtime = { version = "0.1.0", path = "crates/themql-runtime" }
-themql-cache = { version = "0.1.0", path = "crates/themql-cache" }
-themql-storage = { version = "0.1.0", path = "crates/themql-storage" }
-themql-transport = { version = "0.1.0", path = "crates/themql-transport" }
-themql-graphql = { version = "0.1.0", path = "crates/themql-graphql" }
-themql-mqtt = { version = "0.1.0", path = "crates/themql-mqtt" }
-themql-sse = { version = "0.1.0", path = "crates/themql-sse" }
-themql-telemetry = { version = "0.1.0", path = "crates/themql-telemetry" }
-themql-analysis = { version = "0.1.0", path = "crates/themql-analysis" }
-themql-training = { version = "0.1.0", path = "crates/themql-training" }
-themql-inference = { version = "0.1.0", path = "crates/themql-inference" }
-themql-gnc = { version = "0.1.0", path = "crates/themql-gnc" }
-themql-estimation = { version = "0.1.0", path = "crates/themql-estimation" }
-themql-artifact = { version = "0.1.0", path = "crates/themql-artifact" }
-themql-embedded = { version = "0.1.0", path = "crates/themql-embedded" }
-themql-desktop = { version = "0.1.0", path = "crates/themql-desktop" }
+themql-core = { version = "0.2.0", path = "crates/themql-core" }
+themql-schema = { version = "0.2.0", path = "crates/themql-schema" }
+themql-message = { version = "0.2.0", path = "crates/themql-message" }
+themql-query = { version = "0.2.0", path = "crates/themql-query" }
+themql-runtime = { version = "0.2.0", path = "crates/themql-runtime" }
+themql-cache = { version = "0.2.0", path = "crates/themql-cache" }
+themql-storage = { version = "0.2.0", path = "crates/themql-storage" }
+themql-transport = { version = "0.2.0", path = "crates/themql-transport" }
+themql-graphql = { version = "0.2.0", path = "crates/themql-graphql" }
+themql-mqtt = { version = "0.2.0", path = "crates/themql-mqtt" }
+themql-sse = { version = "0.2.0", path = "crates/themql-sse" }
+themql-telemetry = { version = "0.2.0", path = "crates/themql-telemetry" }
+themql-analysis = { version = "0.2.0", path = "crates/themql-analysis" }
+themql-training = { version = "0.2.0", path = "crates/themql-training" }
+themql-inference = { version = "0.2.0", path = "crates/themql-inference" }
+themql-gnc = { version = "0.2.0", path = "crates/themql-gnc" }
+themql-estimation = { version = "0.2.0", path = "crates/themql-estimation" }
+themql-artifact = { version = "0.2.0", path = "crates/themql-artifact" }
+themql-embedded = { version = "0.2.0", path = "crates/themql-embedded" }
+themql-desktop = { version = "0.2.0", path = "crates/themql-desktop" }
 
 [profile.dev]
 debug = true

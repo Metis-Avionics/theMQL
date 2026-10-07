@@ -24,8 +24,8 @@ embedded-alloc.workspace = true
 static_cell.workspace = true
 minimq.workspace = true
 embedded-io-async.workspace = true
-themql-gnc = { version = "0.1.0", path = "../themql-gnc", default-features = false }
-themql-estimation = { version = "0.1.0", path = "../themql-estimation", default-features = false }
+themql-gnc = { version = "0.2.0", path = "../themql-gnc", default-features = false }
+themql-estimation = { version = "0.2.0", path = "../themql-estimation", default-features = false }
 nalgebra = { version = "0.35", default-features = false, features = ["libm"] }
 
 [dependencies]
